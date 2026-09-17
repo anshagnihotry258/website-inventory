@@ -17,7 +17,8 @@ import {
   Eye,
   ShieldCheck,
   Sparkles,
-  Wand2
+  Wand2,
+  ArrowLeft
 } from 'lucide-react';
 
 export default function DocifyPage() {
@@ -36,8 +37,8 @@ export default function DocifyPage() {
   const [eventPurpose, setEventPurpose] = useState('');
   
   const [selectedVenueId, setSelectedVenueId] = useState<string>('L20');
-  const [fromDate, setFromDate] = useState('2026-09-18');
-  const [toDate, setToDate] = useState('2026-09-18');
+  const [fromDate, setFromDate] = useState('2026-09-30');
+  const [toDate, setToDate] = useState('2026-09-30');
   const [fromTime, setFromTime] = useState('10:00');
   const [toTime, setToTime] = useState('12:00');
 
@@ -65,23 +66,44 @@ export default function DocifyPage() {
     }
   }, [selectedVenueId, fromDate, toDate, fromTime, toTime]);
 
-  // Auto-Fill Dummy Permission Details Button Callback
-  const handleAutoFillDummy = () => {
+  // Button 1 Auto-Fill: Sample 1 (L20 - Hackathon)
+  const handleAutoFillSample1 = () => {
+    const randNum = Math.floor(10 + Math.random() * 89);
     setSocietyName(currentUser?.societyName || 'IEEE Student Branch');
     setApplicantName('Ansh Agnihotry');
     setApplicantRoll('21103045');
     setApplicantPhone('+91 9876543210');
     setApplicantEmail('ieee@pec.edu.in');
-    setSubject('Permission for Annual Technical Hackathon & Robotics Showcase 2026');
-    setEventTitle('PEC HackRobotics 2026');
-    setEventPurpose('Annual flagship coding and robotics competition for students across departments.');
+    setSubject('Permission for Annual Technical Hackathon & Coding Sprint');
+    setEventTitle(`HackPEC 2026 (Sprint #${randNum})`);
+    setEventPurpose('Annual flagship coding competition and project showcase for students.');
     setSelectedVenueId('L20');
     setFromDate('2026-09-30');
     setToDate('2026-09-30');
     setFromTime('10:00');
-    setToTime('14:00');
-    setExpectedAudience(150);
+    setToTime('12:00');
+    setExpectedAudience(120);
     setEquipmentInput('Projector, AC, Microphones (2), Power Sockets');
+  };
+
+  // Button 2 Auto-Fill: Sample 2 (L21 - Robotics Workshop)
+  const handleAutoFillSample2 = () => {
+    const randNum = Math.floor(10 + Math.random() * 89);
+    setSocietyName('PEC Robotics Society');
+    setApplicantName('Kabir Verma');
+    setApplicantRoll('21102019');
+    setApplicantPhone('+91 9988776655');
+    setApplicantEmail('robotics@pec.edu.in');
+    setSubject('Request for Venue Permission for Autonomous Bot Hands-on Workshop');
+    setEventTitle(`RoboWars & Circuit Building #${randNum}`);
+    setEventPurpose('Practical hands-on training session on microcontrollers and chassis assembly.');
+    setSelectedVenueId('L21');
+    setFromDate('2026-10-02');
+    setToDate('2026-10-02');
+    setFromTime('14:00');
+    setToTime('17:00');
+    setExpectedAudience(90);
+    setEquipmentInput('Projector, Extra Power Boards, Soldering Kits');
   };
 
   const selectedVenueObj = VENUES.find(v => v.id === selectedVenueId) || VENUES[0];
@@ -125,24 +147,42 @@ export default function DocifyPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Page Heading & Auto-Fill Dummy Button */}
+      {/* Back Button & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
         <div>
+          <Link
+            href="/approvals"
+            className="inline-flex items-center space-x-1 text-xs font-bold text-slate-500 hover:text-slate-900 transition mb-1"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>← Back to Approvals Dashboard</span>
+          </Link>
           <h1 className="text-3xl font-serif font-bold text-slate-900">Book a venue</h1>
           <p className="text-xs text-slate-500 font-sans">
             Times are free-form — any hour of the day, including early morning and late night, may be requested.
           </p>
         </div>
 
-        {/* Dummy Permission Auto-Fill Button */}
-        <button
-          type="button"
-          onClick={handleAutoFillDummy}
-          className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-xs font-extrabold text-blue-950 shadow-md hover:from-amber-400 hover:to-amber-500 transition flex items-center space-x-2 border border-amber-300"
-        >
-          <Wand2 className="h-4 w-4 text-blue-950 animate-bounce" />
-          <span>✨ Auto-Fill Dummy Permission</span>
-        </button>
+        {/* 2 Separate Auto-Fill Dummy Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleAutoFillSample1}
+            className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-extrabold text-blue-950 shadow hover:bg-amber-400 transition flex items-center space-x-1.5 border border-amber-300"
+          >
+            <Wand2 className="h-3.5 w-3.5 text-blue-950" />
+            <span>✨ Auto-Fill Sample 1 (L20)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleAutoFillSample2}
+            className="rounded-xl bg-blue-900 px-3.5 py-2 text-xs font-extrabold text-amber-300 shadow hover:bg-blue-950 transition flex items-center space-x-1.5 border border-blue-700"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+            <span>✨ Auto-Fill Sample 2 (L21)</span>
+          </button>
+        </div>
       </div>
 
       {submitSuccess ? (
@@ -160,7 +200,7 @@ export default function DocifyPage() {
           
           <div className="pt-4 flex flex-wrap justify-center gap-3">
             <Link
-              href={`/document/${submitSuccess.id}`}
+              href={`/document?id=${submitSuccess.id}`}
               className="rounded-xl bg-[#003366] px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-blue-900 transition flex items-center space-x-1.5"
             >
               <Eye className="h-4 w-4 text-amber-400" />

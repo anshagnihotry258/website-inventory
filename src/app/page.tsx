@@ -49,7 +49,7 @@ export default function HomePage() {
 
           <p className="text-sm text-blue-100/90 leading-relaxed">
             Generate official room permission documents using Docify, submit requests, and track digital signatures through the official 5-tier sequential approval workflow: <br className="hidden sm:inline" />
-            <strong className="text-amber-300">Secretary $\rightarrow$ Prof. In-Charge $\rightarrow$ CSTS/JCSTS $\rightarrow$ ADSA $\rightarrow$ DSA</strong>. Fully signed requests automatically reserve rooms on the campus calendar, eliminating double bookings.
+            <strong className="text-amber-300">Secretary → Prof. In-Charge → CSTS/JCSTS → ADSA → DSA</strong>. Fully signed requests automatically reserve rooms on the campus calendar, eliminating double bookings.
           </p>
 
           <div className="pt-2 flex flex-wrap gap-3">
@@ -58,7 +58,7 @@ export default function HomePage() {
               className="inline-flex items-center space-x-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-blue-950 shadow-lg hover:bg-amber-400 transition"
             >
               <Plus className="h-4 w-4" />
-              <span>Create Permission (Docify)</span>
+              <span>Book a Venue (Docify)</span>
             </Link>
             
             <Link
@@ -153,7 +153,7 @@ export default function HomePage() {
                       {perm.status === 'APPROVED' ? '✓ Fully Signed & Booked' : perm.status.replace('_', ' ')}
                     </span>
                     <Link
-                      href={`/document/${perm.id}`}
+                      href={`/document?id=${perm.id}`}
                       className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
                     >
                       View Letter

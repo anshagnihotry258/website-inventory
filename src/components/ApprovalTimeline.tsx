@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { PermissionRequest, Role } from '@/lib/types';
-import { Check, Clock, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Check, Clock, ShieldCheck } from 'lucide-react';
 
 interface ApprovalTimelineProps {
   permission: PermissionRequest;
@@ -18,98 +18,60 @@ const STAGES = [
 
 export default function ApprovalTimeline({ permission }: ApprovalTimelineProps) {
   const isRejected = permission.status === 'REJECTED';
-  const currentStage = permission.currentStage;
 
   return (
-    <div className="w-full space-y-4">
-      {/* Horizontal Step Bar */}
-      <div className="relative flex items-center justify-between">
-        {/* Connecting Line */}
-        <div className="absolute left-0 top-1/2 -z-0 h-1 w-full bg-slate-200 -translate-y-1/2" />
-        <div 
-          className="absolute left-0 top-1/2 -z-0 h-1 bg-emerald-600 -translate-y-1/2 transition-all duration-500" 
-          style={{ width: `${Math.min(100, ((currentStage - 1) / 4) * 100)}%` }}
-        />
-
+    <div className="w-full space-y-3">
+      {/* 5 Independent Signatory Cards (No bar) */}
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
         {STAGES.map((s) => {
           const sig = permission.signatures[s.key];
           const isDone = !!sig;
           const isCurrent = permission.currentStage === s.stage && !isRejected && !isDone;
-          
-          return (
-            <div key={s.stage} className="relative z-10 flex flex-col items-center group">
-              <div 
-                className={`flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold transition-all shadow-md ${
-                  isDone 
-                    ? 'bg-emerald-600 text-white ring-4 ring-emerald-100' 
-                    : isCurrent 
-                      ? 'bg-amber-500 text-blue-950 ring-4 ring-amber-100 animate-pulse' 
-                      : isRejected && permission.currentStage === s.stage
-                        ? 'bg-red-600 text-white'
-                        : 'bg-white text-slate-400 border-2 border-slate-300'
-                }`}
-              >
-                {isDone ? (
-                  <Check className="h-5 w-5" />
-                ) : isCurrent ? (
-                  <Clock className="h-5 w-5" />
-                ) : (
-                  <span>{s.stage}</span>
-                )}
-              </div>
 
-              <div className="mt-2 text-center">
-                <p className={`text-xs font-bold ${isDone ? 'text-emerald-700' : isCurrent ? 'text-amber-600 font-extrabold' : 'text-slate-500'}`}>
-                  {s.title}
-                </p>
-                <p className="text-[10px] text-slate-400 font-mono">
-                  {isDone ? 'Signed ✓' : isCurrent ? 'Pending...' : 'Waiting'}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Signature Verification Details Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-2 pt-2">
-        {STAGES.map((s) => {
-          const sig = permission.signatures[s.key];
           return (
             <div 
               key={s.stage}
-              className={`rounded-lg border p-2.5 text-xs transition ${
-                sig ? 'bg-emerald-50/70 border-emerald-200' : 'bg-slate-50 border-slate-200 opacity-75'
+              className={`rounded-xl border p-3 transition space-y-1.5 ${
+                isDone 
+                  ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950' 
+                  : isCurrent 
+                    ? 'bg-amber-50 border-amber-300 text-amber-950 ring-2 ring-amber-200 animate-pulse' 
+                    : 'bg-slate-50 border-slate-200 text-slate-500 opacity-80'
               }`}
             >
-              <div className="flex items-center justify-between font-semibold text-slate-700">
-                <span className="truncate">{s.label}</span>
-                {sig && <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />}
+              <div className="flex items-center justify-between font-bold text-xs">
+                <span className="truncate">{s.title}</span>
+                {isDone ? (
+                  <ShieldCheck className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                ) : isCurrent ? (
+                  <Clock className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                ) : null}
               </div>
 
               {sig ? (
-                <div className="mt-1.5 space-y-1">
-                  <p className="font-bold text-slate-900 truncate">{sig.signatoryName}</p>
+                <div className="space-y-1 pt-1 border-t border-emerald-200">
+                  <p className="font-bold text-slate-900 text-xs truncate">{sig.signatoryName}</p>
                   {sig.signatureDataUrl ? (
                     <img 
                       src={sig.signatureDataUrl} 
                       alt="Digital Signature" 
-                      className="h-7 max-w-full object-contain bg-white rounded border border-slate-200 px-1 py-0.5" 
+                      className="h-6 max-w-full object-contain bg-white rounded border border-slate-200 px-1 py-0.5" 
                     />
                   ) : (
-                    <div className="font-serif italic text-[11px] text-blue-900 font-semibold border-b border-blue-200 pb-0.5">
+                    <p className="font-serif italic text-[11px] text-blue-900 font-semibold truncate">
                       {sig.signatoryName}
-                    </div>
+                    </p>
                   )}
                   <p className="text-[9px] font-mono text-emerald-700 truncate">
                     Hash: {sig.verificationHash}
                   </p>
-                  <p className="text-[9px] text-slate-400">
-                    {new Date(sig.signedAt).toLocaleDateString()}
-                  </p>
                 </div>
               ) : (
-                <p className="mt-2 text-[10px] italic text-slate-400">Awaiting signature</p>
+                <div className="pt-1 border-t border-slate-200">
+                  <span className={`text-[10px] font-semibold ${isCurrent ? 'text-amber-700 font-bold' : 'text-slate-400'}`}>
+                    {isCurrent ? 'Awaiting Signature...' : 'Pending'}
+                  </span>
+                </div>
               )}
             </div>
           );

@@ -139,7 +139,7 @@ export default function ApprovalsPage() {
             <h1 className="text-2xl font-bold text-slate-900">Permission & Signature Workflow</h1>
           </div>
           <p className="text-xs text-slate-500">
-            Sequential signing chain: Shashvat (Seccy) $\rightarrow$ Prof. Deepak Kumar (P/I) $\rightarrow$ Daiwik (JCSTS) $\rightarrow$ Prof. M.P. Garg (ADSA) $\rightarrow$ Prof. Puneet Kaur (DSA).
+            Sequential signing chain: Shashvat (Seccy) → Prof. Deepak Kumar (P/I) → Daiwik (JCSTS) → Prof. M.P. Garg (ADSA) → Prof. Puneet Kaur (DSA).
           </p>
         </div>
 
@@ -228,7 +228,7 @@ export default function ApprovalsPage() {
                     <h3 className="font-bold text-slate-900 text-lg mt-1">{perm.eventTitle}</h3>
                   </div>
 
-                  {/* Status & Dimmed Action Buttons */}
+                  {/* Status & Action Buttons */}
                   <div className="flex flex-wrap items-center gap-2">
                     {isFullyApproved ? (
                       <span className="rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-extrabold text-emerald-800 flex items-center space-x-1">
@@ -267,7 +267,7 @@ export default function ApprovalsPage() {
                     )}
 
                     <Link
-                      href={`/document/${perm.id}`}
+                      href={`/document?id=${perm.id}`}
                       className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1 border"
                     >
                       <Eye className="h-3.5 w-3.5" />
