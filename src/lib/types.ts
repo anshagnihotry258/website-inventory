@@ -15,6 +15,7 @@ export type PermissionStatus =
   | 'PENDING_CSTS'
   | 'PENDING_ADSA'
   | 'PENDING_DSA'
+  | 'MODIFICATION_REQUESTED'
   | 'APPROVED'
   | 'REJECTED';
 
@@ -64,7 +65,6 @@ export interface PermissionRequest {
   department?: string;
   financialAssistance?: string; // 'Yes' | 'No'
   
-  // Multi-day & Multi-room options
   isMultiDay?: boolean;
   isDiffTimePerDay?: boolean;
   
@@ -73,13 +73,12 @@ export interface PermissionRequest {
   fromTime: string;
   toTime: string;
   
-  // Multi-day second day timings
   day2FromDate?: string;
   day2FromTime?: string;
   day2ToTime?: string;
   
   venueId: string;
-  venueName: string; // e.g. "L20, L21, L22"
+  venueName: string;
   venueIds?: string[];
   
   expectedAudience: number;
@@ -93,11 +92,12 @@ export interface PermissionRequest {
     stage: ApprovalStageNumber;
     actor: string;
     role: Role;
-    action: 'CREATED' | 'APPROVED' | 'REJECTED' | 'MODIFIED' | 'ADMIN_SUPER_APPROVED';
+    action: 'CREATED' | 'APPROVED' | 'REJECTED' | 'MODIFIED' | 'REQUEST_EDIT' | 'ADMIN_SUPER_APPROVED';
     timestamp: string;
     remarks?: string;
   }[];
   
   createdAt: string;
   rejectionReason?: string;
+  editRequestRemarks?: string;
 }

@@ -3,24 +3,25 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
-import { getCurrentUser, PRESET_USERS, STAGE_ROLES } from '@/lib/auth';
-import { getPermissions, signAndAdvancePermission, rejectPermission, adminSelectiveSignPermission } from '@/lib/db';
+import { getCurrentUser, PRESET_USERS } from '@/lib/auth';
+import { getPermissions, signAndAdvancePermission, rejectPermission, adminSelectiveSignPermission, requestEditPermission } from '@/lib/db';
 import { PermissionRequest, UserAccount, Role } from '@/lib/types';
 import SignatureModal from '@/components/SignatureModal';
 import ApprovalTimeline from '@/components/ApprovalTimeline';
 import { 
-  CheckSquare, 
   Clock, 
   CheckCircle2, 
-  ShieldCheck, 
   PenTool, 
-  FileText, 
   Eye, 
   Crown,
   Zap,
   Check,
-  XCircle,
-  UserCheck
+  BarChart3,
+  Building,
+  Users,
+  AlertCircle,
+  FileEdit,
+  Edit3
 } from 'lucide-react';
 
 export default function ApprovalsPage() {
@@ -44,8 +45,10 @@ export default function ApprovalsPage() {
   // Signature Modal state
   const [selectedRequest, setSelectedRequest] = useState<PermissionRequest | null>(null);
   const [isSignModalOpen, setIsSignModalOpen] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  
+  // Request Edit Modal state
+  const [requestEditId, setRequestEditId] = useState<string | null>(null);
+  const [editRemarksInput, setEditRemarksInput] = useState('');
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -149,14 +152,32 @@ export default function ApprovalsPage() {
     });
   };
 
-  const handleReject = (requestId: string) => {
-    if (!rejectionReason.trim()) return;
-
-    rejectPermission(requestId, activeSigner.role, activeSigner.name, rejectionReason);
-    setRejectingId(null);
-    setRejectionReason('');
+  const handleConfirmRequestEdit = () => {
+    if (!requestEditId || !editRemarksInput.trim()) return;
+    requestEditPermission(requestEditId, activeSigner.role, activeSigner.name, editRemarksInput);
+    setRequestEditId(null);
+    setEditRemarksInput('');
     refreshData();
   };
+
+  // Analytics Computation
+  const totalRequests = permissions.length;
+  const approvedRequests = permissions.filter(p => p.status === 'APPROVED').length;
+  const pendingRequests = permissions.filter(p => p.status.startsWith('PENDING')).length;
+  const modRequested = permissions.filter(p => p.status === 'MODIFICATION_REQUESTED').length;
+
+  const venueStats: Record<string, number> = {};
+  const societyStats: Record<string, number> = {};
+
+  permissions.forEach(p => {
+    const vName = p.venueName || 'Unknown';
+    venueStats[vName] = (venueStats[vName] || 0) + 1;
+    const sName = p.societyName || 'Unknown';
+    societyStats[sName] = (societyStats[sName] || 0) + 1;
+  });
+
+  const sortedVenues = Object.entries(venueStats).sort((a, b) => b[1] - a[1]);
+  const sortedSocieties = Object.entries(societyStats).sort((a, b) => b[1] - a[1]);
 
   return (
     <div className="space-y-8">
@@ -266,6 +287,94 @@ export default function ApprovalsPage() {
         </div>
       )}
 
+      {/* Analytics Dashboard (Admin & DSA Overview) */}
+      {(currentUser?.isAdmin || currentUser?.role === 'DSA' || currentUser?.role === 'ADSA') && (
+        <div className="rounded-2xl border bg-white p-6 shadow-md space-y-6">
+          <div className="flex items-center justify-between border-b pb-3">
+            <div className="flex items-center space-x-2">
+              <BarChart3 className="h-5 w-5 text-[#990000]" />
+              <h2 className="text-base font-extrabold text-slate-900">Administrative Analytics & Venue Utilization</h2>
+            </div>
+            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full uppercase font-mono">
+              Real-Time Statistics
+            </span>
+          </div>
+
+          {/* Summary Metric Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="rounded-xl border bg-gradient-to-br from-slate-50 to-slate-100 p-4 space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Applications</span>
+              <p className="text-2xl font-black text-slate-900">{totalRequests}</p>
+              <span className="text-[11px] text-slate-500 block">Submitted via Docify</span>
+            </div>
+            <div className="rounded-xl border bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-4 space-y-1 border-emerald-200">
+              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Fully Sanctioned</span>
+              <p className="text-2xl font-black text-emerald-800">{approvedRequests}</p>
+              <span className="text-[11px] text-emerald-600 block">Rooms locked on calendar</span>
+            </div>
+            <div className="rounded-xl border bg-gradient-to-br from-amber-50 to-amber-100/50 p-4 space-y-1 border-amber-200">
+              <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Pending Signatures</span>
+              <p className="text-2xl font-black text-amber-900">{pendingRequests}</p>
+              <span className="text-[11px] text-amber-700 block">In approval pipeline</span>
+            </div>
+            <div className="rounded-xl border bg-gradient-to-br from-blue-50 to-blue-100/50 p-4 space-y-1 border-blue-200">
+              <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Modifications Requested</span>
+              <p className="text-2xl font-black text-blue-900">{modRequested}</p>
+              <span className="text-[11px] text-blue-700 block">Sent back with remarks</span>
+            </div>
+          </div>
+
+          {/* Detailed Breakdown: Top Venues & Top Societies */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div className="flex items-center space-x-2 border-b pb-2">
+                <Building className="h-4 w-4 text-[#990000]" />
+                <h3 className="font-bold text-xs text-slate-900 uppercase">Top Requested Venues</h3>
+              </div>
+              <div className="space-y-2 text-xs">
+                {sortedVenues.slice(0, 5).map(([vName, count]) => {
+                  const percent = totalRequests > 0 ? Math.round((count / totalRequests) * 100) : 0;
+                  return (
+                    <div key={vName} className="space-y-1">
+                      <div className="flex justify-between font-bold text-slate-700">
+                        <span>{vName}</span>
+                        <span className="font-mono text-slate-500">{count} bookings ({percent}%)</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                        <div className="h-full bg-[#990000] rounded-full" style={{ width: `${percent}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div className="flex items-center space-x-2 border-b pb-2">
+                <Users className="h-4 w-4 text-blue-900" />
+                <h3 className="font-bold text-xs text-slate-900 uppercase">Active Societies Leaderboard</h3>
+              </div>
+              <div className="space-y-2 text-xs">
+                {sortedSocieties.slice(0, 5).map(([sName, count]) => {
+                  const percent = totalRequests > 0 ? Math.round((count / totalRequests) * 100) : 0;
+                  return (
+                    <div key={sName} className="space-y-1">
+                      <div className="flex justify-between font-bold text-slate-700">
+                        <span className="truncate max-w-[200px]">{sName}</span>
+                        <span className="font-mono text-slate-500">{count} requests</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                        <div className="h-full bg-blue-900 rounded-full" style={{ width: `${percent}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* All Applications Pipeline */}
       <div className="space-y-4">
         <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2 border-b pb-2">
@@ -277,6 +386,7 @@ export default function ApprovalsPage() {
           {permissions.map((perm) => {
             const hasSignedThisLevel = !!perm.signatures[activeSigner.role];
             const isFullyApproved = perm.status === 'APPROVED';
+            const isModRequested = perm.status === 'MODIFICATION_REQUESTED';
 
             return (
               <div 
@@ -294,12 +404,17 @@ export default function ApprovalsPage() {
                     <h3 className="font-bold text-slate-900 text-lg mt-1">{perm.eventTitle}</h3>
                   </div>
 
-                  {/* Status & Dimmed Action Buttons */}
+                  {/* Status & Action Buttons */}
                   <div className="flex flex-wrap items-center gap-2">
                     {isFullyApproved ? (
                       <span className="rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-extrabold text-emerald-800 flex items-center space-x-1">
                         <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                         <span>✓ Fully Signed & Booked</span>
+                      </span>
+                    ) : isModRequested ? (
+                      <span className="rounded-full bg-amber-100 px-3.5 py-1 text-xs font-extrabold text-amber-900 flex items-center space-x-1 border border-amber-300">
+                        <AlertCircle className="h-4 w-4 text-amber-600" />
+                        <span>Modification Requested</span>
                       </span>
                     ) : hasSignedThisLevel ? (
                       <button
@@ -310,13 +425,23 @@ export default function ApprovalsPage() {
                         <span>Signed at {activeSigner.role} Level ✓</span>
                       </button>
                     ) : (
-                      <button
-                        onClick={() => handleOpenSignModal(perm)}
-                        className="rounded-xl bg-[#990000] px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-red-900 transition flex items-center space-x-1.5"
-                      >
-                        <PenTool className="h-4 w-4 text-amber-300" />
-                        <span>Approve & Sign ({activeSigner.role})</span>
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleOpenSignModal(perm)}
+                          className="rounded-xl bg-[#990000] px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-red-900 transition flex items-center space-x-1.5"
+                        >
+                          <PenTool className="h-4 w-4 text-amber-300" />
+                          <span>Approve & Sign ({activeSigner.role})</span>
+                        </button>
+
+                        <button
+                          onClick={() => setRequestEditId(perm.id)}
+                          className="rounded-xl bg-amber-100 border border-amber-300 px-3 py-2 text-xs font-bold text-amber-900 hover:bg-amber-200 transition flex items-center space-x-1"
+                        >
+                          <FileEdit className="h-3.5 w-3.5 text-amber-700" />
+                          <span>Request Edit</span>
+                        </button>
+                      </>
                     )}
 
                     {/* Admin Selective Sign Button */}
@@ -330,6 +455,17 @@ export default function ApprovalsPage() {
                       </button>
                     )}
 
+                    {/* Resubmit button if modification requested */}
+                    {isModRequested && (
+                      <Link
+                        href={`/docify?editId=${perm.id}`}
+                        className="rounded-xl bg-amber-500 px-4 py-2 text-xs font-extrabold text-blue-950 shadow hover:bg-amber-400 transition flex items-center space-x-1.5 animate-pulse"
+                      >
+                        <Edit3 className="h-3.5 w-3.5" />
+                        <span>Edit & Resubmit</span>
+                      </Link>
+                    )}
+
                     <Link
                       href={`/document?id=${perm.id}`}
                       className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1 border"
@@ -339,6 +475,17 @@ export default function ApprovalsPage() {
                     </Link>
                   </div>
                 </div>
+
+                {/* Edit Request Remarks Banner */}
+                {isModRequested && perm.editRequestRemarks && (
+                  <div className="rounded-xl bg-amber-50 border border-amber-300 p-3 text-xs text-amber-900 space-y-1">
+                    <span className="font-extrabold flex items-center space-x-1 text-amber-800 uppercase text-[10px]">
+                      <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                      <span>Officer Remarks for Edit:</span>
+                    </span>
+                    <p className="font-medium italic text-slate-800">&quot;{perm.editRequestRemarks}&quot;</p>
+                  </div>
+                )}
 
                 {/* Application Details Summary */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border">
@@ -377,6 +524,44 @@ export default function ApprovalsPage() {
           user={activeSigner}
           permissionTitle={selectedRequest.eventTitle}
         />
+      )}
+
+      {/* Request Edit Remarks Modal */}
+      {requestEditId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center space-x-2 border-b pb-3">
+              <FileEdit className="h-5 w-5 text-amber-600" />
+              <h3 className="font-bold text-slate-900 text-base">Request Application Modification</h3>
+            </div>
+            <p className="text-xs text-slate-600">
+              Specify what changes or corrections the applicant needs to make (e.g. date change, venue availability issue, missing details):
+            </p>
+            <textarea
+              value={editRemarksInput}
+              onChange={(e) => setEditRemarksInput(e.target.value)}
+              placeholder="Enter remarks for student..."
+              className="w-full h-28 rounded-xl border border-slate-300 p-3 text-xs focus:border-amber-500 focus:outline-none"
+            />
+            <div className="flex justify-end space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setRequestEditId(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRequestEdit}
+                disabled={!editRemarksInput.trim()}
+                className="px-4 py-2 rounded-xl text-xs font-extrabold bg-amber-500 text-blue-950 hover:bg-amber-400 disabled:opacity-50"
+              >
+                Send Request to Applicant
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

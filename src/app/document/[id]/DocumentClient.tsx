@@ -8,7 +8,8 @@ import { PermissionRequest, Role } from '@/lib/types';
 import { 
   Printer, 
   ArrowLeft, 
-  ShieldCheck
+  ShieldCheck,
+  CheckCircle2
 } from 'lucide-react';
 
 export default function DocumentClient({ id }: { id: string }) {
@@ -40,15 +41,34 @@ export default function DocumentClient({ id }: { id: string }) {
     );
   }
 
-  // Format Date string matching Screenshot 2
+  // Format Date string
   const formattedDate = permission.isMultiDay
     ? `${permission.fromDate} to ${permission.toDate}`
     : permission.fromDate;
 
-  // Format Time string matching Screenshot 2
+  // Format Time string
   const formattedTime = permission.isDiffTimePerDay && permission.day2FromTime
     ? `${permission.fromDate} : ${permission.fromTime} - ${permission.toTime} | ${permission.day2FromDate || permission.toDate} : ${permission.day2FromTime} - ${permission.day2ToTime}`
     : `${permission.fromTime} - ${permission.toTime}`;
+
+  // Helper to format exact signature timestamp cleanly
+  const formatSigTimestamp = (isoString?: string) => {
+    if (!isoString) return '';
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return isoString;
+    }
+  };
 
   const secSig = permission.signatures['SECCY'];
   const cstsSig = permission.signatures['CSTS'];
@@ -58,7 +78,7 @@ export default function DocumentClient({ id }: { id: string }) {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Control Bar (No Print) */}
+      {/* Control Bar (No Print) - Available at ALL steps starting from Seccy */}
       <div className="no-print flex flex-col sm:flex-row items-center justify-between gap-4 border-b pb-4">
         <Link
           href="/approvals"
@@ -73,6 +93,7 @@ export default function DocumentClient({ id }: { id: string }) {
             Tracking: {permission.trackingCode}
           </span>
 
+          {/* Export / Print Button available at all steps */}
           <button
             onClick={handlePrint}
             className="flex items-center space-x-1.5 rounded-xl bg-[#990000] px-5 py-2 text-xs font-bold text-white shadow hover:bg-red-900 transition"
@@ -83,7 +104,7 @@ export default function DocumentClient({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Printable Official PEC Performa Container matching Screenshots 1 & 2 EXACTLY */}
+      {/* Printable Official PEC Performa Container */}
       <div className="rounded-2xl border bg-white p-8 md:p-12 shadow-2xl space-y-6 font-serif text-slate-900 border-t-8 border-t-[#990000] relative">
         {/* Verification Stamp Background */}
         {permission.status === 'APPROVED' && (
@@ -92,7 +113,7 @@ export default function DocumentClient({ id }: { id: string }) {
           </div>
         )}
 
-        {/* Official Header matching Screenshot 1 */}
+        {/* Official Header */}
         <div className="text-center space-y-1 font-serif text-slate-900">
           <h1 className="text-lg font-black tracking-wide uppercase">PUNJAB ENGINEERING COLLEGE</h1>
           <h2 className="text-sm font-bold tracking-wide uppercase">(DEEMED TO BE UNIVERSITY)</h2>
@@ -109,7 +130,7 @@ export default function DocumentClient({ id }: { id: string }) {
           </div>
         </div>
 
-        {/* Official Bordered Table matching Screenshot 1 & 2 */}
+        {/* Official Bordered Table */}
         <div className="border-2 border-slate-900 font-sans">
           <table className="w-full border-collapse text-xs">
             <tbody>
@@ -149,7 +170,7 @@ export default function DocumentClient({ id }: { id: string }) {
           </table>
         </div>
 
-        {/* Standard Disclaimers matching Screenshot 1 */}
+        {/* Standard Disclaimers */}
         <div className="space-y-2 text-xs font-sans leading-relaxed text-slate-800 pt-2">
           <p>
             Note: The undersigned takes full responsibility for any damage to the institute&apos;s property in the above-mentioned rooms during the specified time.
@@ -162,86 +183,106 @@ export default function DocumentClient({ id }: { id: string }) {
           </p>
         </div>
 
-        {/* Official 5 Signatory Titles matching Screenshot 1 with Signatures Drawn DIRECTLY ABOVE Titles */}
+        {/* Official 5 Signatory Titles with Signatures & Exact Date/Time Stamps Drawn DIRECTLY ABOVE Titles */}
         <div className="pt-12 font-sans space-y-12">
           {/* Top Row: Secretary & CSTS */}
           <div className="grid grid-cols-2 gap-8 items-end">
             {/* Secretary Box */}
-            <div className="flex flex-col items-center justify-end text-center min-h-[90px]">
-              {secSig && (
+            <div className="flex flex-col items-center justify-end text-center min-h-[100px]">
+              {secSig ? (
                 <div className="mb-1 space-y-0.5">
                   {secSig.signatureDataUrl ? (
                     <img src={secSig.signatureDataUrl} alt="Secretary Signature" className="h-10 object-contain mx-auto" />
                   ) : (
                     <span className="font-serif italic font-bold text-blue-900 text-sm">{secSig.signatoryName}</span>
                   )}
-                  <p className="text-[9px] font-mono text-emerald-700">✓ {secSig.signatoryName} ({secSig.verificationHash})</p>
+                  <p className="text-[9px] font-bold text-emerald-800 font-mono">✓ {secSig.signatoryName}</p>
+                  <p className="text-[8px] text-slate-600 font-mono">Signed: {formatSigTimestamp(secSig.signedAt)}</p>
+                  <p className="text-[7px] text-slate-400 font-mono">Hash: {secSig.verificationHash}</p>
                 </div>
+              ) : (
+                <p className="text-[9px] text-slate-300 italic mb-2">Pending Signature</p>
               )}
-              <p className="font-bold text-xs text-slate-900">(Secretary/J. Secretary)</p>
+              <p className="font-bold text-xs text-slate-900 border-t pt-1 w-full">(Secretary/J. Secretary)</p>
             </div>
 
             {/* CSTS Box */}
-            <div className="flex flex-col items-center justify-end text-center min-h-[90px]">
-              {cstsSig && (
+            <div className="flex flex-col items-center justify-end text-center min-h-[100px]">
+              {cstsSig ? (
                 <div className="mb-1 space-y-0.5">
                   {cstsSig.signatureDataUrl ? (
                     <img src={cstsSig.signatureDataUrl} alt="CSTS Signature" className="h-10 object-contain mx-auto" />
                   ) : (
                     <span className="font-serif italic font-bold text-blue-900 text-sm">{cstsSig.signatoryName}</span>
                   )}
-                  <p className="text-[9px] font-mono text-emerald-700">✓ {cstsSig.signatoryName} ({cstsSig.verificationHash})</p>
+                  <p className="text-[9px] font-bold text-emerald-800 font-mono">✓ {cstsSig.signatoryName}</p>
+                  <p className="text-[8px] text-slate-600 font-mono">Signed: {formatSigTimestamp(cstsSig.signedAt)}</p>
+                  <p className="text-[7px] text-slate-400 font-mono">Hash: {cstsSig.verificationHash}</p>
                 </div>
+              ) : (
+                <p className="text-[9px] text-slate-300 italic mb-2">Pending Signature</p>
               )}
-              <p className="font-bold text-xs text-slate-900">(CCS/CSTS)</p>
+              <p className="font-bold text-xs text-slate-900 border-t pt-1 w-full">(CCS/CSTS)</p>
             </div>
           </div>
 
-          {/* Bottom Row: P/I Security, ADSA, DSA */}
+          {/* Bottom Row: Officer Incharge P/I, ADSA, DSA */}
           <div className="grid grid-cols-3 gap-4 items-end pt-4">
             {/* Officer Incharge P/I Box */}
-            <div className="flex flex-col items-center justify-end text-center min-h-[90px]">
-              {piSig && (
+            <div className="flex flex-col items-center justify-end text-center min-h-[100px]">
+              {piSig ? (
                 <div className="mb-1 space-y-0.5">
                   {piSig.signatureDataUrl ? (
                     <img src={piSig.signatureDataUrl} alt="P/I Signature" className="h-10 object-contain mx-auto" />
                   ) : (
                     <span className="font-serif italic font-bold text-blue-900 text-sm">{piSig.signatoryName}</span>
                   )}
-                  <p className="text-[9px] font-mono text-emerald-700">✓ {piSig.signatoryName} ({piSig.verificationHash})</p>
+                  <p className="text-[9px] font-bold text-emerald-800 font-mono">✓ {piSig.signatoryName}</p>
+                  <p className="text-[8px] text-slate-600 font-mono">Signed: {formatSigTimestamp(piSig.signedAt)}</p>
+                  <p className="text-[7px] text-slate-400 font-mono">Hash: {piSig.verificationHash}</p>
                 </div>
+              ) : (
+                <p className="text-[9px] text-slate-300 italic mb-2">Pending Signature</p>
               )}
-              <p className="font-bold text-xs text-slate-900">(Officer Incharge)</p>
+              <p className="font-bold text-xs text-slate-900 border-t pt-1 w-full">(Officer Incharge)</p>
             </div>
 
             {/* ADSA Box */}
-            <div className="flex flex-col items-center justify-end text-center min-h-[90px]">
-              {adsaSig && (
+            <div className="flex flex-col items-center justify-end text-center min-h-[100px]">
+              {adsaSig ? (
                 <div className="mb-1 space-y-0.5">
                   {adsaSig.signatureDataUrl ? (
                     <img src={adsaSig.signatureDataUrl} alt="ADSA Signature" className="h-10 object-contain mx-auto" />
                   ) : (
                     <span className="font-serif italic font-bold text-blue-900 text-sm">{adsaSig.signatoryName}</span>
                   )}
-                  <p className="text-[9px] font-mono text-emerald-700">✓ {adsaSig.signatoryName} ({adsaSig.verificationHash})</p>
+                  <p className="text-[9px] font-bold text-emerald-800 font-mono">✓ {adsaSig.signatoryName}</p>
+                  <p className="text-[8px] text-slate-600 font-mono">Signed: {formatSigTimestamp(adsaSig.signedAt)}</p>
+                  <p className="text-[7px] text-slate-400 font-mono">Hash: {adsaSig.verificationHash}</p>
                 </div>
+              ) : (
+                <p className="text-[9px] text-slate-300 italic mb-2">Pending Signature</p>
               )}
-              <p className="font-bold text-xs text-slate-900">(ADSA)</p>
+              <p className="font-bold text-xs text-slate-900 border-t pt-1 w-full">(ADSA)</p>
             </div>
 
             {/* DSA Box */}
-            <div className="flex flex-col items-center justify-end text-center min-h-[90px]">
-              {dsaSig && (
+            <div className="flex flex-col items-center justify-end text-center min-h-[100px]">
+              {dsaSig ? (
                 <div className="mb-1 space-y-0.5">
                   {dsaSig.signatureDataUrl ? (
                     <img src={dsaSig.signatureDataUrl} alt="DSA Signature" className="h-10 object-contain mx-auto" />
                   ) : (
                     <span className="font-serif italic font-bold text-blue-900 text-sm">{dsaSig.signatoryName}</span>
                   )}
-                  <p className="text-[9px] font-mono text-emerald-700">✓ {dsaSig.signatoryName} ({dsaSig.verificationHash})</p>
+                  <p className="text-[9px] font-bold text-emerald-800 font-mono">✓ {dsaSig.signatoryName}</p>
+                  <p className="text-[8px] text-slate-600 font-mono">Signed: {formatSigTimestamp(dsaSig.signedAt)}</p>
+                  <p className="text-[7px] text-slate-400 font-mono">Hash: {dsaSig.verificationHash}</p>
                 </div>
+              ) : (
+                <p className="text-[9px] text-slate-300 italic mb-2">Pending Signature</p>
               )}
-              <p className="font-bold text-xs text-slate-900">(DSA)</p>
+              <p className="font-bold text-xs text-slate-900 border-t pt-1 w-full">(DSA)</p>
             </div>
           </div>
         </div>
@@ -250,7 +291,7 @@ export default function DocumentClient({ id }: { id: string }) {
         <div className="pt-8 border-t font-sans flex flex-col sm:flex-row items-center justify-between text-[10px] text-slate-500 gap-2">
           <div className="flex items-center space-x-1.5">
             <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <span>Digitally Verified & Locked by Punjab Engineering College Permission System</span>
+            <span>Digitally Verified & Timestamped by Punjab Engineering College Permission System</span>
           </div>
           <p className="font-mono">Document ID: {permission.id}</p>
         </div>

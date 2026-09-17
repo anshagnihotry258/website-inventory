@@ -34,7 +34,7 @@ export const VENUES: Venue[] = [
   { id: 'Auditorium', name: 'Auditorium', type: 'Auditorium', capacity: 800, building: 'Central Campus', facilities: ['Stage', 'Sound System', 'AC'] }
 ];
 
-const PERMISSIONS_STORAGE_KEY = 'pec_permission_requests_v5';
+const PERMISSIONS_STORAGE_KEY = 'pec_permission_requests_v6';
 
 const SEED_REQUESTS: PermissionRequest[] = [
   {
@@ -71,7 +71,7 @@ const SEED_REQUESTS: PermissionRequest[] = [
         role: 'SECCY',
         signatoryName: 'Shashvat',
         designation: 'Secretary (Seccy)',
-        signedAt: '2026-09-18T10:15:00Z',
+        signedAt: '2026-09-18T10:15:30Z',
         verificationHash: 'SIG-SEC-88219034',
         remarks: 'Recommended. Agenda verified.'
       },
@@ -79,7 +79,7 @@ const SEED_REQUESTS: PermissionRequest[] = [
         role: 'PROF_INCHARGE',
         signatoryName: 'Prof. Deepak Kumar',
         designation: 'Prof. In-Charge (P/I)',
-        signedAt: '2026-09-18T11:30:00Z',
+        signedAt: '2026-09-18T11:30:45Z',
         verificationHash: 'SIG-PI-99410214',
         remarks: 'Approved.'
       },
@@ -87,7 +87,7 @@ const SEED_REQUESTS: PermissionRequest[] = [
         role: 'CSTS',
         signatoryName: 'Daiwik',
         designation: 'Convenor JCSTS / CSTS',
-        signedAt: '2026-09-18T14:00:00Z',
+        signedAt: '2026-09-18T14:00:12Z',
         verificationHash: 'SIG-CSTS-1102934',
         remarks: 'Approved.'
       },
@@ -103,18 +103,18 @@ const SEED_REQUESTS: PermissionRequest[] = [
         role: 'DSA',
         signatoryName: 'Prof. Puneet Kaur',
         designation: 'Dean Student Affairs (DSA)',
-        signedAt: '2026-09-18T17:45:00Z',
+        signedAt: '2026-09-18T17:45:10Z',
         verificationHash: 'SIG-DSA-0012984',
         remarks: 'Sanctioned. Rooms locked.'
       }
     },
     history: [
       { stage: 1, actor: 'IEEE Student Branch', role: 'SOCIETY', action: 'CREATED', timestamp: '2026-09-18T09:00:00Z' },
-      { stage: 1, actor: 'Shashvat', role: 'SECCY', action: 'APPROVED', timestamp: '2026-09-18T10:15:00Z' },
-      { stage: 2, actor: 'Prof. Deepak Kumar', role: 'PROF_INCHARGE', action: 'APPROVED', timestamp: '2026-09-18T11:30:00Z' },
-      { stage: 3, actor: 'Daiwik', role: 'CSTS', action: 'APPROVED', timestamp: '2026-09-18T14:00:00Z' },
+      { stage: 1, actor: 'Shashvat', role: 'SECCY', action: 'APPROVED', timestamp: '2026-09-18T10:15:30Z' },
+      { stage: 2, actor: 'Prof. Deepak Kumar', role: 'PROF_INCHARGE', action: 'APPROVED', timestamp: '2026-09-18T11:30:45Z' },
+      { stage: 3, actor: 'Daiwik', role: 'CSTS', action: 'APPROVED', timestamp: '2026-09-18T14:00:12Z' },
       { stage: 4, actor: 'Prof. M.P. Garg', role: 'ADSA', action: 'APPROVED', timestamp: '2026-09-18T16:20:00Z' },
-      { stage: 5, actor: 'Prof. Puneet Kaur', role: 'DSA', action: 'APPROVED', timestamp: '2026-09-18T17:45:00Z' }
+      { stage: 5, actor: 'Prof. Puneet Kaur', role: 'DSA', action: 'APPROVED', timestamp: '2026-09-18T17:45:10Z' }
     ],
     createdAt: '2026-09-18T09:00:00Z'
   }
@@ -139,7 +139,6 @@ export function savePermissions(requests: PermissionRequest[]) {
   localStorage.setItem(PERMISSIONS_STORAGE_KEY, JSON.stringify(requests));
 }
 
-// Conflict / Double Booking Engine supporting single or multiple room selection
 export function checkVenueConflict(
   venueIdOrIds: string | string[],
   fromDate: string,
@@ -226,7 +225,6 @@ export function createPermissionRequest(data: Omit<PermissionRequest, 'id' | 'tr
   return { success: true, request: newRequest };
 }
 
-// Single Role Sign Action
 export function signAndAdvancePermission(
   requestId: string,
   role: Role,
@@ -254,7 +252,6 @@ export function signAndAdvancePermission(
 
   perm.signatures[role] = signatureObj;
 
-  // Check how many stages are now completed
   const hasDSA = !!perm.signatures['DSA'];
   if (hasDSA) {
     perm.status = 'APPROVED';
@@ -276,7 +273,33 @@ export function signAndAdvancePermission(
   return { success: true, updatedRequest: perm };
 }
 
-// Admin Selective Sign: Allows Admin to sign any 1, 2, 3, 4, or all 5 roles at once!
+export function requestEditPermission(
+  requestId: string,
+  role: Role,
+  actorName: string,
+  remarks: string
+): { success: boolean; updatedRequest?: PermissionRequest; error?: string } {
+  const all = getPermissions();
+  const index = all.findIndex(p => p.id === requestId);
+  if (index === -1) return { success: false, error: 'Request not found' };
+
+  const perm = all[index];
+  perm.status = 'MODIFICATION_REQUESTED';
+  perm.editRequestRemarks = remarks;
+  perm.history.push({
+    stage: perm.currentStage,
+    actor: actorName,
+    role,
+    action: 'REQUEST_EDIT',
+    timestamp: new Date().toISOString(),
+    remarks
+  });
+
+  all[index] = perm;
+  savePermissions(all);
+  return { success: true, updatedRequest: perm };
+}
+
 export function adminSelectiveSignPermission(
   requestId: string,
   rolesToSign: Role[]
@@ -346,3 +369,33 @@ export function rejectPermission(
   savePermissions(all);
   return { success: true, updatedRequest: perm };
 }
+
+export function updatePermissionRequest(
+  id: string,
+  data: Partial<PermissionRequest>
+): { success: boolean; request?: PermissionRequest; error?: string } {
+  const all = getPermissions();
+  const index = all.findIndex(p => p.id === id);
+  if (index === -1) return { success: false, error: 'Request not found' };
+
+  const perm: PermissionRequest = {
+    ...all[index],
+    ...data,
+    status: 'PENDING_SECCY',
+    currentStage: 1,
+  };
+
+  perm.history.push({
+    stage: 1,
+    actor: data.applicantName || perm.applicantName,
+    role: 'SOCIETY',
+    action: 'MODIFIED',
+    timestamp: new Date().toISOString(),
+    remarks: 'Application modified and resubmitted by applicant.'
+  });
+
+  all[index] = perm;
+  savePermissions(all);
+  return { success: true, request: perm };
+}
+
