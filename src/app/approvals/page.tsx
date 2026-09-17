@@ -18,7 +18,8 @@ import {
   Eye, 
   Crown,
   Zap,
-  ChevronDown,
+  Check,
+  XCircle,
   UserCheck
 } from 'lucide-react';
 
@@ -39,6 +40,12 @@ export default function ApprovalsPage() {
     const user = getCurrentUser();
     setUserState(user);
     setPermissions(getPermissions());
+
+    const handleAuthChange = () => {
+      setUserState(getCurrentUser());
+    };
+    window.addEventListener('auth-change', handleAuthChange);
+    return () => window.removeEventListener('auth-change', handleAuthChange);
   }, []);
 
   const refreshData = () => {
@@ -50,7 +57,7 @@ export default function ApprovalsPage() {
     setIsSignModalOpen(true);
   };
 
-  // Determine active signing user account (either current logged in user or admin impersonated authority)
+  // Determine active signing user account
   const getActiveSignerAccount = (): UserAccount => {
     if (!currentUser) return PRESET_USERS['shashvat'];
     if (currentUser.role === 'ADMIN') {
@@ -69,9 +76,10 @@ export default function ApprovalsPage() {
     return currentUser;
   };
 
+  const activeSigner = getActiveSignerAccount();
+
   const handleConfirmSign = (signatureDataUrl: string, remarks: string) => {
     if (!selectedRequest) return;
-    const activeSigner = getActiveSignerAccount();
 
     const result = signAndAdvancePermission(
       selectedRequest.id,
@@ -97,7 +105,7 @@ export default function ApprovalsPage() {
     }
   };
 
-  // Admin Super Approve All 5 Stages Immediately
+  // Admin Super Approve All 5 Stages
   const handleAdminSuperApprove = (requestId: string) => {
     const result = adminSuperApprovePermission(requestId, currentUser?.name || 'Administrator');
     if (result.success) {
@@ -111,7 +119,6 @@ export default function ApprovalsPage() {
   };
 
   const handleReject = (requestId: string) => {
-    const activeSigner = getActiveSignerAccount();
     if (!rejectionReason.trim()) return;
 
     rejectPermission(requestId, activeSigner.role, activeSigner.name, rejectionReason);
@@ -119,8 +126,6 @@ export default function ApprovalsPage() {
     setRejectionReason('');
     refreshData();
   };
-
-  const activeSigner = getActiveSignerAccount();
 
   return (
     <div className="space-y-8">
@@ -138,7 +143,7 @@ export default function ApprovalsPage() {
           </p>
         </div>
 
-        {/* User Role & Admin Control Card */}
+        {/* User Role Card */}
         <div className="rounded-xl border bg-white p-3 shadow-md space-y-2 min-w-[280px]">
           <div className="flex items-center space-x-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-900 font-bold text-lg">
@@ -146,12 +151,12 @@ export default function ApprovalsPage() {
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-bold text-slate-900 text-sm">{currentUser?.name}</span>
+                <span className="font-bold text-slate-900 text-sm">{currentUser?.name || 'Guest User'}</span>
                 <span className="rounded bg-blue-900 text-amber-300 font-mono text-[10px] font-bold px-1.5 py-0.2">
-                  {currentUser?.role}
+                  {currentUser?.role || 'LOGIN'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500">{currentUser?.designation}</p>
+              <p className="text-[11px] text-slate-500">{currentUser?.designation || 'Sign in to approve'}</p>
             </div>
           </div>
 
@@ -188,7 +193,7 @@ export default function ApprovalsPage() {
             <div>
               <h3 className="font-extrabold text-sm text-white">Backend Administrator Super Access</h3>
               <p className="text-xs text-amber-100">
-                You can act as any officer using the role dropdown above, or click <strong>&quot;Super Approve (Pass All 5 Stages)&quot;</strong> on any request.
+                Super Approve will instantly fill signatures for all 5 stages in the backend and lock the venue.
               </p>
             </div>
           </div>
@@ -203,84 +208,99 @@ export default function ApprovalsPage() {
         </h2>
 
         <div className="space-y-6">
-          {permissions.map((perm) => (
-            <div 
-              key={perm.id} 
-              className="rounded-2xl border bg-white p-6 shadow-sm space-y-4 hover:shadow-xl transition group relative border-l-4 border-l-[#003366]"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3">
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <span className="font-mono text-xs font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                      {perm.trackingCode}
-                    </span>
-                    <span className="text-xs font-bold text-slate-700">{perm.societyName}</span>
+          {permissions.map((perm) => {
+            const hasSignedThisLevel = !!perm.signatures[activeSigner.role];
+            const isFullyApproved = perm.status === 'APPROVED';
+
+            return (
+              <div 
+                key={perm.id} 
+                className="rounded-2xl border bg-white p-6 shadow-sm space-y-4 hover:shadow-xl transition group relative border-l-4 border-l-[#003366]"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-mono text-xs font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                        {perm.trackingCode}
+                      </span>
+                      <span className="text-xs font-bold text-slate-700">{perm.societyName}</span>
+                    </div>
+                    <h3 className="font-bold text-slate-900 text-lg mt-1">{perm.eventTitle}</h3>
                   </div>
-                  <h3 className="font-bold text-slate-900 text-lg mt-1">{perm.eventTitle}</h3>
-                </div>
 
-                {/* Status & Action Buttons */}
-                <div className="flex flex-wrap items-center gap-2">
-                  {perm.status === 'APPROVED' ? (
-                    <span className="rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-extrabold text-emerald-800 flex items-center space-x-1">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                      <span>✓ Fully Signed & Booked</span>
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleOpenSignModal(perm)}
-                      className="rounded-xl bg-[#003366] px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-blue-900 transition flex items-center space-x-1.5"
+                  {/* Status & Dimmed Action Buttons */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {isFullyApproved ? (
+                      <span className="rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-extrabold text-emerald-800 flex items-center space-x-1">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <span>✓ Fully Signed & Booked</span>
+                      </span>
+                    ) : hasSignedThisLevel ? (
+                      /* Dimmed button if level already approved */
+                      <button
+                        disabled
+                        className="rounded-xl bg-emerald-50 border border-emerald-300 px-4 py-2 text-xs font-extrabold text-emerald-800 cursor-not-allowed opacity-80 flex items-center space-x-1.5"
+                      >
+                        <Check className="h-4 w-4 text-emerald-600" />
+                        <span>Signed at {activeSigner.role} Level ✓</span>
+                      </button>
+                    ) : (
+                      /* Active approve button if not signed yet */
+                      <button
+                        onClick={() => handleOpenSignModal(perm)}
+                        className="rounded-xl bg-[#003366] px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-blue-900 transition flex items-center space-x-1.5"
+                      >
+                        <PenTool className="h-4 w-4 text-amber-400" />
+                        <span>Approve & Sign ({activeSigner.role})</span>
+                      </button>
+                    )}
+
+                    {/* Admin Super Approve Button */}
+                    {currentUser?.isAdmin && !isFullyApproved && (
+                      <button
+                        onClick={() => handleAdminSuperApprove(perm.id)}
+                        className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-extrabold text-blue-950 shadow-md hover:bg-amber-400 transition flex items-center space-x-1"
+                      >
+                        <Zap className="h-4 w-4" />
+                        <span>Super Approve All 5 Stages</span>
+                      </button>
+                    )}
+
+                    <Link
+                      href={`/document/${perm.id}`}
+                      className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1 border"
                     >
-                      <PenTool className="h-4 w-4 text-amber-400" />
-                      <span>Approve & Sign ({activeSigner.role})</span>
-                    </button>
-                  )}
-
-                  {/* Admin Super Approve Button */}
-                  {currentUser?.isAdmin && perm.status !== 'APPROVED' && (
-                    <button
-                      onClick={() => handleAdminSuperApprove(perm.id)}
-                      className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-extrabold text-blue-950 shadow-md hover:bg-amber-400 transition flex items-center space-x-1"
-                    >
-                      <Zap className="h-4 w-4" />
-                      <span>Super Approve All 5 Stages</span>
-                    </button>
-                  )}
-
-                  <Link
-                    href={`/document/${perm.id}`}
-                    className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1 border"
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    <span>View Official Letter</span>
-                  </Link>
+                      <Eye className="h-3.5 w-3.5" />
+                      <span>View Official Letter</span>
+                    </Link>
+                  </div>
                 </div>
+
+                {/* Application Details Summary */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border">
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">BOOKED VENUE</span>
+                    <span className="font-bold text-slate-900">{perm.venueName}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">DATES</span>
+                    <span className="font-semibold text-slate-900">{perm.fromDate} to {perm.toDate}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">TIMING</span>
+                    <span className="font-semibold text-slate-900">{perm.fromTime} - {perm.toTime}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">APPLICANT</span>
+                    <span className="font-semibold text-slate-900">{perm.applicantName} ({perm.applicantRoll})</span>
+                  </div>
+                </div>
+
+                {/* 5-Stage Approval Progress Timeline */}
+                <ApprovalTimeline permission={perm} />
               </div>
-
-              {/* Application Details Summary */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border">
-                <div>
-                  <span className="text-slate-400 block text-[10px]">BOOKED VENUE</span>
-                  <span className="font-bold text-slate-900">{perm.venueName}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">DATES</span>
-                  <span className="font-semibold text-slate-900">{perm.fromDate} to {perm.toDate}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">TIMING</span>
-                  <span className="font-semibold text-slate-900">{perm.fromTime} - {perm.toTime}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">APPLICANT</span>
-                  <span className="font-semibold text-slate-900">{perm.applicantName} ({perm.applicantRoll})</span>
-                </div>
-              </div>
-
-              {/* 5-Stage Approval Progress Timeline */}
-              <ApprovalTimeline permission={perm} />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

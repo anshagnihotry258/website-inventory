@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { VENUES, checkVenueConflict, createPermissionRequest } from '@/lib/db';
@@ -15,23 +16,24 @@ import {
   Send, 
   Eye,
   ShieldCheck,
-  Check
+  Sparkles,
+  Wand2
 } from 'lucide-react';
 
 export default function DocifyPage() {
   const router = useRouter();
   const [currentUser, setUserState] = useState<UserAccount | null>(null);
 
-  // Form State matching screenshot
+  // Form State
   const [societyName, setSocietyName] = useState('IEEE Student Branch');
-  const [applicantName, setApplicantName] = useState('Ansh Agnihotry');
-  const [applicantRoll, setApplicantRoll] = useState('21103045');
-  const [applicantPhone, setApplicantPhone] = useState('+91 9876543210');
-  const [applicantEmail, setApplicantEmail] = useState('ieee@pec.edu.in');
+  const [applicantName, setApplicantName] = useState('');
+  const [applicantRoll, setApplicantRoll] = useState('');
+  const [applicantPhone, setApplicantPhone] = useState('');
+  const [applicantEmail, setApplicantEmail] = useState('');
 
-  const [subject, setSubject] = useState('Request for Venue Permission for Technical Workshop');
-  const [eventTitle, setEventTitle] = useState('AI & Robotics Innovation Hackathon');
-  const [eventPurpose, setEventPurpose] = useState('Enter the exact purpose for which the room is required');
+  const [subject, setSubject] = useState('');
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventPurpose, setEventPurpose] = useState('');
   
   const [selectedVenueId, setSelectedVenueId] = useState<string>('L20');
   const [fromDate, setFromDate] = useState('2026-09-18');
@@ -40,7 +42,7 @@ export default function DocifyPage() {
   const [toTime, setToTime] = useState('12:00');
 
   const [expectedAudience, setExpectedAudience] = useState(120);
-  const [equipmentInput, setEquipmentInput] = useState('Projector, AC, Microphones (2)');
+  const [equipmentInput, setEquipmentInput] = useState('');
 
   // Conflict state
   const [conflict, setConflict] = useState<{ conflict: boolean; conflictingPermission?: PermissionRequest }>({ conflict: false });
@@ -63,6 +65,25 @@ export default function DocifyPage() {
     }
   }, [selectedVenueId, fromDate, toDate, fromTime, toTime]);
 
+  // Auto-Fill Dummy Permission Details Button Callback
+  const handleAutoFillDummy = () => {
+    setSocietyName(currentUser?.societyName || 'IEEE Student Branch');
+    setApplicantName('Ansh Agnihotry');
+    setApplicantRoll('21103045');
+    setApplicantPhone('+91 9876543210');
+    setApplicantEmail('ieee@pec.edu.in');
+    setSubject('Permission for Annual Technical Hackathon & Robotics Showcase 2026');
+    setEventTitle('PEC HackRobotics 2026');
+    setEventPurpose('Annual flagship coding and robotics competition for students across departments.');
+    setSelectedVenueId('L20');
+    setFromDate('2026-09-30');
+    setToDate('2026-09-30');
+    setFromTime('10:00');
+    setToTime('14:00');
+    setExpectedAudience(150);
+    setEquipmentInput('Projector, AC, Microphones (2), Power Sockets');
+  };
+
   const selectedVenueObj = VENUES.find(v => v.id === selectedVenueId) || VENUES[0];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -78,13 +99,13 @@ export default function DocifyPage() {
 
     const result = createPermissionRequest({
       societyName,
-      applicantName,
-      applicantRoll,
-      applicantPhone,
-      applicantEmail,
-      subject,
-      eventTitle,
-      eventPurpose,
+      applicantName: applicantName || 'Student Applicant',
+      applicantRoll: applicantRoll || '21100000',
+      applicantPhone: applicantPhone || '+91 9999999999',
+      applicantEmail: applicantEmail || 'society@pec.edu.in',
+      subject: subject || 'Permission Request for Venue Booking',
+      eventTitle: eventTitle || 'Society Technical Event',
+      eventPurpose: eventPurpose || 'Technical session and student development workshop',
       venueId: selectedVenueObj.id,
       venueName: selectedVenueObj.name,
       fromDate,
@@ -104,12 +125,24 @@ export default function DocifyPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Page Heading Matching Screenshot */}
-      <div className="space-y-1 border-b pb-4">
-        <h1 className="text-3xl font-serif font-bold text-slate-900">Book a venue</h1>
-        <p className="text-xs text-slate-500 font-sans">
-          Times are free-form — any hour of the day, including early morning and late night, may be requested.
-        </p>
+      {/* Page Heading & Auto-Fill Dummy Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
+        <div>
+          <h1 className="text-3xl font-serif font-bold text-slate-900">Book a venue</h1>
+          <p className="text-xs text-slate-500 font-sans">
+            Times are free-form — any hour of the day, including early morning and late night, may be requested.
+          </p>
+        </div>
+
+        {/* Dummy Permission Auto-Fill Button */}
+        <button
+          type="button"
+          onClick={handleAutoFillDummy}
+          className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-xs font-extrabold text-blue-950 shadow-md hover:from-amber-400 hover:to-amber-500 transition flex items-center space-x-2 border border-amber-300"
+        >
+          <Wand2 className="h-4 w-4 text-blue-950 animate-bounce" />
+          <span>✨ Auto-Fill Dummy Permission</span>
+        </button>
       </div>
 
       {submitSuccess ? (
@@ -125,20 +158,20 @@ export default function DocifyPage() {
             Your booking request for <strong>{submitSuccess.venueName}</strong> has been submitted to the approval pipeline starting with <strong>1. Shashvat (Seccy)</strong>.
           </p>
           
-          <div className="pt-4 flex justify-center space-x-3">
-            <button
-              onClick={() => router.push(`/document/${submitSuccess.id}`)}
+          <div className="pt-4 flex flex-wrap justify-center gap-3">
+            <Link
+              href={`/document/${submitSuccess.id}`}
               className="rounded-xl bg-[#003366] px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-blue-900 transition flex items-center space-x-1.5"
             >
               <Eye className="h-4 w-4 text-amber-400" />
               <span>View Permission Letter</span>
-            </button>
-            <button
-              onClick={() => router.push('/approvals')}
-              className="rounded-xl bg-slate-100 px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+            </Link>
+            <Link
+              href="/approvals"
+              className="rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-extrabold text-blue-950 shadow hover:bg-amber-400 transition"
             >
-              View Application Status
-            </button>
+              View Application Status & Approvals
+            </Link>
           </div>
         </div>
       ) : (
@@ -185,42 +218,72 @@ export default function DocifyPage() {
             />
           </div>
 
-          {/* Event Title & Subject */}
+          {/* Subject & Event Title */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-800">Official Subject</label>
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Permission Request Subject"
+                className="w-full rounded-lg border border-slate-300 p-2.5 text-xs focus:outline-none"
+                required
+              />
+            </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-800">Event Title</label>
               <input
                 type="text"
                 value={eventTitle}
                 onChange={(e) => setEventTitle(e.target.value)}
+                placeholder="Title of Event"
                 className="w-full rounded-lg border border-slate-300 p-2.5 text-xs focus:outline-none"
                 required
               />
             </div>
+          </div>
+
+          {/* Applicant Info */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t pt-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-800">Applicant Lead Name & Roll</label>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  value={applicantName}
-                  onChange={(e) => setApplicantName(e.target.value)}
-                  placeholder="Applicant Name"
-                  className="rounded-lg border border-slate-300 p-2.5 text-xs focus:outline-none"
-                  required
-                />
-                <input
-                  type="text"
-                  value={applicantRoll}
-                  onChange={(e) => setApplicantRoll(e.target.value)}
-                  placeholder="Roll No"
-                  className="rounded-lg border border-slate-300 p-2.5 text-xs focus:outline-none"
-                  required
-                />
-              </div>
+              <label className="text-xs font-bold text-slate-800">Applicant Student Name</label>
+              <input
+                type="text"
+                value={applicantName}
+                onChange={(e) => setApplicantName(e.target.value)}
+                placeholder="Student Name"
+                className="w-full rounded-lg border border-slate-300 p-2.5 text-xs focus:outline-none"
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-800">Roll Number</label>
+              <input
+                type="text"
+                value={applicantRoll}
+                onChange={(e) => setApplicantRoll(e.target.value)}
+                placeholder="Roll No"
+                className="w-full rounded-lg border border-slate-300 p-2.5 text-xs focus:outline-none"
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-800">Phone Number</label>
+              <input
+                type="text"
+                value={applicantPhone}
+                onChange={(e) => setApplicantPhone(e.target.value)}
+                placeholder="+91 Phone"
+                className="w-full rounded-lg border border-slate-300 p-2.5 text-xs focus:outline-none"
+                required
+              />
             </div>
           </div>
 
-          {/* Date Range Inputs Matching Screenshot */}
+          {/* Date Range Inputs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-800">Start date</label>
@@ -244,7 +307,7 @@ export default function DocifyPage() {
             </div>
           </div>
 
-          {/* Time Inputs Matching Screenshot */}
+          {/* Time Inputs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-800">Start time</label>
@@ -269,7 +332,7 @@ export default function DocifyPage() {
             </div>
           </div>
 
-          {/* Venue(s) Pill Buttons Selection EXACTLY matching user's uploaded screenshot */}
+          {/* Venue Pills */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-800">Venue(s)</label>
@@ -278,7 +341,6 @@ export default function DocifyPage() {
               </span>
             </div>
 
-            {/* Pill Buttons Container */}
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
               <p className="text-[10px] font-bold uppercase text-slate-400">Lecture Halls & Tutorial Rooms</p>
               
@@ -302,6 +364,18 @@ export default function DocifyPage() {
                 })}
               </div>
             </div>
+          </div>
+
+          {/* Equipment Input */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-800">Equipment Needed (Comma Separated)</label>
+            <input
+              type="text"
+              value={equipmentInput}
+              onChange={(e) => setEquipmentInput(e.target.value)}
+              placeholder="Projector, Microphones, Power Sockets"
+              className="w-full rounded-lg border border-slate-300 p-2.5 text-xs focus:outline-none"
+            />
           </div>
 
           {/* Submit Button */}

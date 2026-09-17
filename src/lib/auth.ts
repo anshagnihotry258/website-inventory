@@ -1,7 +1,7 @@
 import { UserAccount, Role } from './types';
 
 export const PRESET_USERS: Record<string, UserAccount & { passwordHash: string }> = {
-  // Admin Account (Super Access)
+  // Admin Account
   'admin': {
     id: 'usr_admin',
     username: 'admin',
@@ -161,18 +161,18 @@ export const STAGE_ROLES: Record<number, { role: Role; label: string; username: 
   5: { role: 'DSA', label: '5. DSA (Dean Student Affairs)', username: 'prof puneet kaur', name: 'Prof. Puneet Kaur' }
 };
 
-const STORAGE_KEY = 'pec_current_user_v3';
+const STORAGE_KEY = 'pec_auth_session_v4';
 
 export function getCurrentUser(): UserAccount | null {
   if (typeof window === 'undefined') return null;
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
-    return PRESET_USERS['ieee'];
+    return null; // Return null if not logged in
   }
   try {
     return JSON.parse(stored);
   } catch {
-    return PRESET_USERS['ieee'];
+    return null;
   }
 }
 
@@ -183,4 +183,10 @@ export function setCurrentUser(user: UserAccount | null) {
   } else {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
   }
+  // Dispatch custom auth-change event so all React components refresh session state instantly
+  window.dispatchEvent(new Event('auth-change'));
+}
+
+export function logoutUser() {
+  setCurrentUser(null);
 }
