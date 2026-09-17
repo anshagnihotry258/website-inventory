@@ -1,4 +1,5 @@
 export type Role = 
+  | 'ADMIN'
   | 'SOCIETY'
   | 'SECCY'
   | 'PROF_INCHARGE'
@@ -19,19 +20,20 @@ export type PermissionStatus =
 
 export interface UserAccount {
   id: string;
-  username: string; // e.g. IEEE, SECCY, PROF_SMITH, CSTS_PEC, ADSA_PEC, DSA_PEC
+  username: string;
   name: string;
   role: Role;
   designation: string;
   department?: string;
   societyName?: string;
   avatar?: string;
+  isAdmin?: boolean;
 }
 
 export interface Venue {
   id: string;
   name: string;
-  type: 'Lecture Hall' | 'Tutorial Room' | 'Auditorium' | 'Open Air' | 'Conference Room';
+  type: 'Lecture Hall' | 'Tutorial Room' | 'Auditorium';
   capacity: number;
   building: string;
   facilities: string[];
@@ -42,14 +44,14 @@ export interface SignatureRecord {
   signatoryName: string;
   designation: string;
   signedAt: string;
-  signatureDataUrl?: string; // base64 canvas image data URL
+  signatureDataUrl?: string;
   verificationHash: string;
   remarks?: string;
 }
 
 export interface PermissionRequest {
   id: string;
-  trackingCode: string; // e.g. PEC-PERM-2026-0891
+  trackingCode: string;
   societyName: string;
   applicantName: string;
   applicantRoll: string;
@@ -63,10 +65,10 @@ export interface PermissionRequest {
   venueId: string;
   venueName: string;
   
-  fromDate: string; // YYYY-MM-DD
-  toDate: string;   // YYYY-MM-DD
-  fromTime: string; // HH:mm
-  toTime: string;   // HH:mm
+  fromDate: string;
+  toDate: string;
+  fromTime: string;
+  toTime: string;
   
   expectedAudience: number;
   equipmentNeeded: string[];
@@ -79,7 +81,7 @@ export interface PermissionRequest {
     stage: ApprovalStageNumber;
     actor: string;
     role: Role;
-    action: 'CREATED' | 'APPROVED' | 'REJECTED' | 'MODIFIED';
+    action: 'CREATED' | 'APPROVED' | 'REJECTED' | 'MODIFIED' | 'ADMIN_SUPER_APPROVED';
     timestamp: string;
     remarks?: string;
   }[];

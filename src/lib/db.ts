@@ -1,21 +1,35 @@
-import { PermissionRequest, Venue, PermissionStatus, Role, ApprovalStageNumber } from './types';
+import { PermissionRequest, Venue, PermissionStatus, Role, ApprovalStageNumber, SignatureRecord } from './types';
 
 export const VENUES: Venue[] = [
-  { id: 'L1', name: 'Lecture Hall L1', type: 'Lecture Hall', capacity: 150, building: 'Academic Block A', facilities: ['Projector', 'AC', 'PA System', 'Podium'] },
-  { id: 'L2', name: 'Lecture Hall L2', type: 'Lecture Hall', capacity: 150, building: 'Academic Block A', facilities: ['Projector', 'AC', 'PA System'] },
-  { id: 'L3', name: 'Lecture Hall L3', type: 'Lecture Hall', capacity: 150, building: 'Academic Block A', facilities: ['Projector', 'AC'] },
-  { id: 'L8', name: 'Lecture Hall L8', type: 'Lecture Hall', capacity: 200, building: 'Academic Block B', facilities: ['Smart Board', 'AC', 'Audio System'] },
-  { id: 'L9', name: 'Lecture Hall L9', type: 'Lecture Hall', capacity: 200, building: 'Academic Block B', facilities: ['Smart Board', 'AC', 'Audio System'] },
-  { id: 'L20', name: 'Lecture Hall L20', type: 'Lecture Hall', capacity: 120, building: 'New Academic Block', facilities: ['Projector', 'AC'] },
-  { id: 'L21', name: 'Lecture Hall L21', type: 'Lecture Hall', capacity: 120, building: 'New Academic Block', facilities: ['Projector', 'AC'] },
-  { id: 'T1', name: 'Tutorial Room T1', type: 'Tutorial Room', capacity: 60, building: 'Academic Block A', facilities: ['Whiteboard', 'AC'] },
-  { id: 'T2', name: 'Tutorial Room T2', type: 'Tutorial Room', capacity: 60, building: 'Academic Block A', facilities: ['Whiteboard'] },
-  { id: 'AUDITORIUM', name: 'Main Auditorium', type: 'Auditorium', capacity: 800, building: 'Central Campus', facilities: ['Stage Lighting', 'Pro Sound System', 'Central AC', 'Green Rooms'] },
-  { id: 'OAT', name: 'Open Air Theatre (OAT)', type: 'Open Air', capacity: 1200, building: 'Student Center Area', facilities: ['Stage', 'Open Seating'] },
-  { id: 'CONF_HALL', name: 'Senate Conference Hall', type: 'Conference Room', capacity: 80, building: 'Administrative Block', facilities: ['VC System', 'Mic System', 'AC'] }
+  // Lecture Halls (L20 - L31 from screenshot)
+  { id: 'L20', name: 'L20', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+  { id: 'L21', name: 'L21', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+  { id: 'L22', name: 'L22', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+  { id: 'L23', name: 'L23', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+  { id: 'L24', name: 'L24', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+  { id: 'L25', name: 'L25', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+  { id: 'L26', name: 'L26', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+  { id: 'L27', name: 'L27', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+  { id: 'L28', name: 'L28', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+  { id: 'L29', name: 'L29', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+  { id: 'L30', name: 'L30', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+  { id: 'L31', name: 'L31', type: 'Lecture Hall', capacity: 120, building: 'Academic Block', facilities: ['Projector', 'AC'] },
+
+  // Tutorial Rooms (T1 - T8 from screenshot)
+  { id: 'T1', name: 'T1', type: 'Tutorial Room', capacity: 60, building: 'Academic Block', facilities: ['Whiteboard', 'AC'] },
+  { id: 'T2', name: 'T2', type: 'Tutorial Room', capacity: 60, building: 'Academic Block', facilities: ['Whiteboard'] },
+  { id: 'T3', name: 'T3', type: 'Tutorial Room', capacity: 60, building: 'Academic Block', facilities: ['Whiteboard'] },
+  { id: 'T4', name: 'T4', type: 'Tutorial Room', capacity: 60, building: 'Academic Block', facilities: ['Whiteboard'] },
+  { id: 'T5', name: 'T5', type: 'Tutorial Room', capacity: 60, building: 'Academic Block', facilities: ['Whiteboard'] },
+  { id: 'T6', name: 'T6', type: 'Tutorial Room', capacity: 60, building: 'Academic Block', facilities: ['Whiteboard'] },
+  { id: 'T7', name: 'T7', type: 'Tutorial Room', capacity: 60, building: 'Academic Block', facilities: ['Whiteboard'] },
+  { id: 'T8', name: 'T8', type: 'Tutorial Room', capacity: 60, building: 'Academic Block', facilities: ['Whiteboard'] },
+
+  // Auditorium
+  { id: 'Auditorium', name: 'Auditorium', type: 'Auditorium', capacity: 800, building: 'Central Campus', facilities: ['Stage', 'Sound System', 'AC'] }
 ];
 
-const PERMISSIONS_STORAGE_KEY = 'pec_permission_requests_v2';
+const PERMISSIONS_STORAGE_KEY = 'pec_permission_requests_v3';
 
 const SEED_REQUESTS: PermissionRequest[] = [
   {
@@ -29,8 +43,8 @@ const SEED_REQUESTS: PermissionRequest[] = [
     subject: 'Permission for Annual Tech Symposium & Hackathon 2026',
     eventTitle: 'HackPEC 2026 - National Hackathon',
     eventPurpose: 'Annual flagship technical competition, coding workshops, and project showcase.',
-    venueId: 'AUDITORIUM',
-    venueName: 'Main Auditorium',
+    venueId: 'Auditorium',
+    venueName: 'Auditorium',
     fromDate: '2026-09-25',
     toDate: '2026-09-26',
     fromTime: '09:00',
@@ -42,52 +56,52 @@ const SEED_REQUESTS: PermissionRequest[] = [
     signatures: {
       SECCY: {
         role: 'SECCY',
-        signatoryName: 'Aarav Sharma',
-        designation: 'Secretary, Technical Societies',
+        signatoryName: 'Shashvat',
+        designation: 'Secretary (Seccy)',
         signedAt: '2026-09-18T10:15:00Z',
         verificationHash: 'SIG-SEC-88219034',
         remarks: 'Recommended. Agenda verified.'
       },
       PROF_INCHARGE: {
         role: 'PROF_INCHARGE',
-        signatoryName: 'Dr. Rajesh Verma',
-        designation: 'Professor In-Charge (Robotics/Technical)',
+        signatoryName: 'Prof. Deepak Kumar',
+        designation: 'Prof. In-Charge (P/I)',
         signedAt: '2026-09-18T11:30:00Z',
         verificationHash: 'SIG-PI-99410214',
         remarks: 'Approved. Event aligns with academic goals.'
       },
       CSTS: {
         role: 'CSTS',
-        signatoryName: 'Dr. Neha Gupta',
-        designation: 'Convenor CSTS',
+        signatoryName: 'Daiwik',
+        designation: 'Convenor JCSTS / CSTS',
         signedAt: '2026-09-18T14:00:00Z',
         verificationHash: 'SIG-CSTS-1102934',
         remarks: 'Approved. Schedule cleared.'
       },
       ADSA: {
         role: 'ADSA',
-        signatoryName: 'Dr. Vikram Malhotra',
-        designation: 'Associate Dean Student Affairs',
+        signatoryName: 'Prof. M.P. Garg',
+        designation: 'Associate Dean Student Affairs (ADSA)',
         signedAt: '2026-09-18T16:20:00Z',
         verificationHash: 'SIG-ADSA-5561023',
         remarks: 'Forwarded for final sanction.'
       },
       DSA: {
         role: 'DSA',
-        signatoryName: 'Prof. (Dr.) Sanjeev Kumar',
-        designation: 'Dean Student Affairs',
+        signatoryName: 'Prof. Puneet Kaur',
+        designation: 'Dean Student Affairs (DSA)',
         signedAt: '2026-09-18T17:45:00Z',
         verificationHash: 'SIG-DSA-0012984',
-        remarks: 'Sanctioned. Auditorium booked.'
+        remarks: 'Sanctioned. Auditorium locked.'
       }
     },
     history: [
       { stage: 1, actor: 'IEEE Student Branch', role: 'SOCIETY', action: 'CREATED', timestamp: '2026-09-18T09:00:00Z' },
-      { stage: 1, actor: 'Aarav Sharma', role: 'SECCY', action: 'APPROVED', timestamp: '2026-09-18T10:15:00Z' },
-      { stage: 2, actor: 'Dr. Rajesh Verma', role: 'PROF_INCHARGE', action: 'APPROVED', timestamp: '2026-09-18T11:30:00Z' },
-      { stage: 3, actor: 'Dr. Neha Gupta', role: 'CSTS', action: 'APPROVED', timestamp: '2026-09-18T14:00:00Z' },
-      { stage: 4, actor: 'Dr. Vikram Malhotra', role: 'ADSA', action: 'APPROVED', timestamp: '2026-09-18T16:20:00Z' },
-      { stage: 5, actor: 'Prof. (Dr.) Sanjeev Kumar', role: 'DSA', action: 'APPROVED', timestamp: '2026-09-18T17:45:00Z' }
+      { stage: 1, actor: 'Shashvat', role: 'SECCY', action: 'APPROVED', timestamp: '2026-09-18T10:15:00Z' },
+      { stage: 2, actor: 'Prof. Deepak Kumar', role: 'PROF_INCHARGE', action: 'APPROVED', timestamp: '2026-09-18T11:30:00Z' },
+      { stage: 3, actor: 'Daiwik', role: 'CSTS', action: 'APPROVED', timestamp: '2026-09-18T14:00:00Z' },
+      { stage: 4, actor: 'Prof. M.P. Garg', role: 'ADSA', action: 'APPROVED', timestamp: '2026-09-18T16:20:00Z' },
+      { stage: 5, actor: 'Prof. Puneet Kaur', role: 'DSA', action: 'APPROVED', timestamp: '2026-09-18T17:45:00Z' }
     ],
     createdAt: '2026-09-18T09:00:00Z'
   },
@@ -99,11 +113,11 @@ const SEED_REQUESTS: PermissionRequest[] = [
     applicantRoll: '21102019',
     applicantPhone: '+91 9988776655',
     applicantEmail: 'robotics@pec.edu.in',
-    subject: 'Request for Lecture Hall L1 for Autonomous Bot Workshop',
+    subject: 'Request for Lecture Hall L20 for Autonomous Bot Workshop',
     eventTitle: 'RoboWars & Line Follower Hands-on Session',
     eventPurpose: 'Practical workshop on microcontrollers, sensor integration, and chassis building.',
-    venueId: 'L1',
-    venueName: 'Lecture Hall L1',
+    venueId: 'L20',
+    venueName: 'L20',
     fromDate: '2026-09-28',
     toDate: '2026-09-28',
     fromTime: '14:00',
@@ -115,16 +129,16 @@ const SEED_REQUESTS: PermissionRequest[] = [
     signatures: {
       SECCY: {
         role: 'SECCY',
-        signatoryName: 'Aarav Sharma',
-        designation: 'Secretary, Technical Societies',
+        signatoryName: 'Shashvat',
+        designation: 'Secretary (Seccy)',
         signedAt: '2026-09-18T12:00:00Z',
         verificationHash: 'SIG-SEC-7728109',
-        remarks: 'Approved. Forwarded to Prof In-charge.'
+        remarks: 'Approved. Forwarded to Prof. Deepak Kumar.'
       }
     },
     history: [
       { stage: 1, actor: 'PEC Robotics Society', role: 'SOCIETY', action: 'CREATED', timestamp: '2026-09-18T11:00:00Z' },
-      { stage: 1, actor: 'Aarav Sharma', role: 'SECCY', action: 'APPROVED', timestamp: '2026-09-18T12:00:00Z' }
+      { stage: 1, actor: 'Shashvat', role: 'SECCY', action: 'APPROVED', timestamp: '2026-09-18T12:00:00Z' }
     ],
     createdAt: '2026-09-18T11:00:00Z'
   }
@@ -160,22 +174,19 @@ export function checkVenueConflict(
 ): { conflict: boolean; conflictingPermission?: PermissionRequest } {
   const allPermissions = getPermissions();
   
-  // Conflicting requests are those that are either APPROVED or currently in active approval workflow
   const activePermissions = allPermissions.filter(
     p => p.status !== 'REJECTED' && p.id !== excludeRequestId && p.venueId === venueId
   );
   
   for (const perm of activePermissions) {
-    // Check date overlap: (start1 <= end2) && (end1 >= start1)
     const d1Start = new Date(fromDate).getTime();
-    const d1End = new Date(toDate).getTime();
+    const d1End = new Date(toDate || fromDate).getTime();
     const d2Start = new Date(perm.fromDate).getTime();
-    const d2End = new Date(perm.toDate).getTime();
+    const d2End = new Date(perm.toDate || perm.fromDate).getTime();
 
     const dateOverlap = d1Start <= d2End && d1End >= d2Start;
     
     if (dateOverlap) {
-      // Check time overlap on overlapping dates
       const t1Start = parseTimeToMinutes(fromTime);
       const t1End = parseTimeToMinutes(toTime);
       const t2Start = parseTimeToMinutes(perm.fromTime);
@@ -199,7 +210,6 @@ function parseTimeToMinutes(timeStr: string): number {
 }
 
 export function createPermissionRequest(data: Omit<PermissionRequest, 'id' | 'trackingCode' | 'status' | 'currentStage' | 'signatures' | 'history' | 'createdAt'>): { success: boolean; request?: PermissionRequest; error?: string } {
-  // Check double booking conflict first!
   const conflictCheck = checkVenueConflict(data.venueId, data.fromDate, data.toDate, data.fromTime, data.toTime);
   if (conflictCheck.conflict && conflictCheck.conflictingPermission) {
     return {
@@ -277,9 +287,9 @@ export function signAndAdvancePermission(
   } else if (role === 'ADSA') {
     nextStage = 5;
     nextStatus = 'PENDING_DSA';
-  } else if (role === 'DSA') {
+  } else if (role === 'DSA' || role === 'ADMIN') {
     nextStage = 6;
-    nextStatus = 'APPROVED'; // Fully Signed & Room Locked!
+    nextStatus = 'APPROVED';
   }
 
   perm.currentStage = nextStage;
@@ -296,6 +306,80 @@ export function signAndAdvancePermission(
   all[index] = perm;
   savePermissions(all);
 
+  return { success: true, updatedRequest: perm };
+}
+
+// Admin Super-Approve Backend Function: Immediately signs all 5 stages & locks room!
+export function adminSuperApprovePermission(
+  requestId: string,
+  adminName: string = 'Backend Administrator'
+): { success: boolean; updatedRequest?: PermissionRequest; error?: string } {
+  const all = getPermissions();
+  const index = all.findIndex(p => p.id === requestId);
+  if (index === -1) return { success: false, error: 'Request not found' };
+
+  const perm = all[index];
+  const now = new Date().toISOString();
+
+  // Populate signatures for all 5 stages
+  perm.signatures['SECCY'] = perm.signatures['SECCY'] || {
+    role: 'SECCY',
+    signatoryName: 'Shashvat (Admin Override)',
+    designation: 'Secretary (Seccy)',
+    signedAt: now,
+    verificationHash: `SIG-SEC-ADMIN-${Math.floor(100000 + Math.random() * 900000)}`,
+    remarks: 'Super approved by Backend Admin.'
+  };
+
+  perm.signatures['PROF_INCHARGE'] = perm.signatures['PROF_INCHARGE'] || {
+    role: 'PROF_INCHARGE',
+    signatoryName: 'Prof. Deepak Kumar (Admin Override)',
+    designation: 'Prof. In-Charge (P/I)',
+    signedAt: now,
+    verificationHash: `SIG-PI-ADMIN-${Math.floor(100000 + Math.random() * 900000)}`,
+    remarks: 'Super approved by Backend Admin.'
+  };
+
+  perm.signatures['CSTS'] = perm.signatures['CSTS'] || {
+    role: 'CSTS',
+    signatoryName: 'Daiwik (Admin Override)',
+    designation: 'Convenor JCSTS / CSTS',
+    signedAt: now,
+    verificationHash: `SIG-CSTS-ADMIN-${Math.floor(100000 + Math.random() * 900000)}`,
+    remarks: 'Super approved by Backend Admin.'
+  };
+
+  perm.signatures['ADSA'] = perm.signatures['ADSA'] || {
+    role: 'ADSA',
+    signatoryName: 'Prof. M.P. Garg (Admin Override)',
+    designation: 'Associate Dean SA (ADSA)',
+    signedAt: now,
+    verificationHash: `SIG-ADSA-ADMIN-${Math.floor(100000 + Math.random() * 900000)}`,
+    remarks: 'Super approved by Backend Admin.'
+  };
+
+  perm.signatures['DSA'] = perm.signatures['DSA'] || {
+    role: 'DSA',
+    signatoryName: 'Prof. Puneet Kaur (Admin Override)',
+    designation: 'Dean Student Affairs (DSA)',
+    signedAt: now,
+    verificationHash: `SIG-DSA-ADMIN-${Math.floor(100000 + Math.random() * 900000)}`,
+    remarks: 'Super approved by Backend Admin. Room Locked.'
+  };
+
+  perm.currentStage = 6;
+  perm.status = 'APPROVED';
+  perm.history.push({
+    stage: 6,
+    actor: adminName,
+    role: 'ADMIN',
+    action: 'ADMIN_SUPER_APPROVED',
+    timestamp: now,
+    remarks: 'Backend Super Approval applied to all stages.'
+  });
+
+  all[index] = perm;
+  savePermissions(all);
   return { success: true, updatedRequest: perm };
 }
 

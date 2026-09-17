@@ -1,112 +1,178 @@
 import { UserAccount, Role } from './types';
 
 export const PRESET_USERS: Record<string, UserAccount & { passwordHash: string }> = {
-  // Societies
-  'IEEE': {
+  // Admin Account (Super Access)
+  'admin': {
+    id: 'usr_admin',
+    username: 'admin',
+    passwordHash: 'admin',
+    name: 'Administrator',
+    role: 'ADMIN',
+    designation: 'System Super Administrator',
+    department: 'Dean Student Affairs Secretariat',
+    avatar: '👑',
+    isAdmin: true
+  },
+
+  // Authority Officers (Username = Given Name, Password = 1)
+  'shashvat': {
+    id: 'usr_shashvat',
+    username: 'shashvat',
+    passwordHash: '1',
+    name: 'Shashvat',
+    role: 'SECCY',
+    designation: 'Secretary (Seccy)',
+    department: 'Student Council',
+    avatar: '✍️'
+  },
+  'seccy': {
+    id: 'usr_seccy_alias',
+    username: 'seccy',
+    passwordHash: '1',
+    name: 'Shashvat',
+    role: 'SECCY',
+    designation: 'Secretary (Seccy)',
+    department: 'Student Council',
+    avatar: '✍️'
+  },
+
+  'prof deepak kumar': {
+    id: 'usr_deepak',
+    username: 'prof deepak kumar',
+    passwordHash: '1',
+    name: 'Prof. Deepak Kumar',
+    role: 'PROF_INCHARGE',
+    designation: 'Prof. In-Charge (P/I)',
+    department: 'Faculty Affairs',
+    avatar: '👨‍🏫'
+  },
+  'deepak': {
+    id: 'usr_deepak_alias',
+    username: 'deepak',
+    passwordHash: '1',
+    name: 'Prof. Deepak Kumar',
+    role: 'PROF_INCHARGE',
+    designation: 'Prof. In-Charge (P/I)',
+    department: 'Faculty Affairs',
+    avatar: '👨‍🏫'
+  },
+
+  'daiwik': {
+    id: 'usr_daiwik',
+    username: 'daiwik',
+    passwordHash: '1',
+    name: 'Daiwik',
+    role: 'CSTS',
+    designation: 'Convenor JCSTS / CSTS',
+    department: 'Cultural & Technical Societies',
+    avatar: '🏛️'
+  },
+  'jcsts': {
+    id: 'usr_jcsts_alias',
+    username: 'jcsts',
+    passwordHash: '1',
+    name: 'Daiwik',
+    role: 'CSTS',
+    designation: 'Convenor JCSTS / CSTS',
+    department: 'Cultural & Technical Societies',
+    avatar: '🏛️'
+  },
+
+  'prof mp garg': {
+    id: 'usr_mpgarg',
+    username: 'prof mp garg',
+    passwordHash: '1',
+    name: 'Prof. M.P. Garg',
+    role: 'ADSA',
+    designation: 'Associate Dean Student Affairs (ADSA)',
+    department: 'Dean Student Affairs Secretariat',
+    avatar: '⚖️'
+  },
+  'mp garg': {
+    id: 'usr_mpgarg_alias',
+    username: 'mp garg',
+    passwordHash: '1',
+    name: 'Prof. M.P. Garg',
+    role: 'ADSA',
+    designation: 'Associate Dean Student Affairs (ADSA)',
+    department: 'Dean Student Affairs Secretariat',
+    avatar: '⚖️'
+  },
+
+  'prof puneet kaur': {
+    id: 'usr_puneet',
+    username: 'prof puneet kaur',
+    passwordHash: '1',
+    name: 'Prof. Puneet Kaur',
+    role: 'DSA',
+    designation: 'Dean Student Affairs (DSA)',
+    department: 'Office of Dean Student Affairs',
+    avatar: '🎓'
+  },
+  'puneet': {
+    id: 'usr_puneet_alias',
+    username: 'puneet',
+    passwordHash: '1',
+    name: 'Prof. Puneet Kaur',
+    role: 'DSA',
+    designation: 'Dean Student Affairs (DSA)',
+    department: 'Office of Dean Student Affairs',
+    avatar: '🎓'
+  },
+
+  // Clubs / Societies (Username = Name, Password = 1)
+  'ieee': {
     id: 'usr_ieee',
-    username: 'IEEE',
-    passwordHash: 'IEEE1974**',
-    name: 'IEEE PEC Student Branch',
+    username: 'ieee',
+    passwordHash: '1',
+    name: 'IEEE Student Branch',
     role: 'SOCIETY',
     designation: 'Technical Society',
     societyName: 'IEEE Student Branch',
     avatar: '⚡'
   },
-  'ASME': {
+  'asme': {
     id: 'usr_asme',
-    username: 'ASME',
-    passwordHash: 'ASME1974**',
+    username: 'asme',
+    passwordHash: '1',
     name: 'ASME PEC Chapter',
     role: 'SOCIETY',
     designation: 'Technical Society',
     societyName: 'ASME',
     avatar: '⚙️'
   },
-  'ROBOTICS': {
+  'robotics': {
     id: 'usr_robotics',
-    username: 'ROBOTICS',
-    passwordHash: 'ROBOTICS2026',
+    username: 'robotics',
+    passwordHash: '1',
     name: 'PEC Robotics Society',
     role: 'SOCIETY',
     designation: 'Technical Society',
     societyName: 'Robotics Society',
     avatar: '🤖'
-  },
-  
-  // Authorities in approval order:
-  'SECCY': {
-    id: 'usr_seccy',
-    username: 'SECCY',
-    passwordHash: 'SECCY2026',
-    name: 'Aarav Sharma',
-    role: 'SECCY',
-    designation: 'Secretary, Technical Societies',
-    department: 'Student Council',
-    avatar: '✍️'
-  },
-  'PROF_INCHARGE': {
-    id: 'usr_prof',
-    username: 'PROF_INCHARGE',
-    passwordHash: 'PROF2026',
-    name: 'Dr. Rajesh Verma',
-    role: 'PROF_INCHARGE',
-    designation: 'Professor In-Charge (Robotics/Technical)',
-    department: 'Computer Science & Engineering',
-    avatar: '👨‍🏫'
-  },
-  'CSTS': {
-    id: 'usr_csts',
-    username: 'CSTS',
-    passwordHash: 'CSTS2026',
-    name: 'Dr. Neha Gupta',
-    role: 'CSTS',
-    designation: 'Convenor, Technical & Cultural Societies (CSTS)',
-    department: 'Dean Student Affairs Office',
-    avatar: '🏛️'
-  },
-  'ADSA': {
-    id: 'usr_adsa',
-    username: 'ADSA',
-    passwordHash: 'ADSA2026',
-    name: 'Dr. Vikram Malhotra',
-    role: 'ADSA',
-    designation: 'Associate Dean Student Affairs (ADSA)',
-    department: 'Dean Student Affairs Secretariat',
-    avatar: '⚖️'
-  },
-  'DSA': {
-    id: 'usr_dsa',
-    username: 'DSA',
-    passwordHash: 'DSA2026',
-    name: 'Prof. (Dr.) Sanjeev Kumar',
-    role: 'DSA',
-    designation: 'Dean Student Affairs (DSA)',
-    department: 'Office of Dean Student Affairs',
-    avatar: '🎓'
   }
 };
 
-export const STAGE_ROLES: Record<number, { role: Role; label: string; username: string }> = {
-  1: { role: 'SECCY', label: '1. Secretary (Seccy)', username: 'SECCY' },
-  2: { role: 'PROF_INCHARGE', label: '2. Prof. In-Charge (P/I)', username: 'PROF_INCHARGE' },
-  3: { role: 'CSTS', label: '3. Convenor CSTS / JCSTS', username: 'CSTS' },
-  4: { role: 'ADSA', label: '4. ADSA (Associate Dean)', username: 'ADSA' },
-  5: { role: 'DSA', label: '5. DSA (Dean Student Affairs)', username: 'DSA' }
+export const STAGE_ROLES: Record<number, { role: Role; label: string; username: string; name: string }> = {
+  1: { role: 'SECCY', label: '1. Secretary (Seccy)', username: 'shashvat', name: 'Shashvat' },
+  2: { role: 'PROF_INCHARGE', label: '2. Prof. In-Charge (P/I)', username: 'prof deepak kumar', name: 'Prof. Deepak Kumar' },
+  3: { role: 'CSTS', label: '3. Convenor JCSTS / CSTS', username: 'daiwik', name: 'Daiwik' },
+  4: { role: 'ADSA', label: '4. ADSA (Associate Dean)', username: 'prof mp garg', name: 'Prof. M.P. Garg' },
+  5: { role: 'DSA', label: '5. DSA (Dean Student Affairs)', username: 'prof puneet kaur', name: 'Prof. Puneet Kaur' }
 };
 
-const STORAGE_KEY = 'pec_current_user';
+const STORAGE_KEY = 'pec_current_user_v3';
 
 export function getCurrentUser(): UserAccount | null {
   if (typeof window === 'undefined') return null;
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
-    // Default to IEEE for quick convenience
-    return PRESET_USERS['IEEE'];
+    return PRESET_USERS['ieee'];
   }
   try {
     return JSON.parse(stored);
   } catch {
-    return PRESET_USERS['IEEE'];
+    return PRESET_USERS['ieee'];
   }
 }
 
