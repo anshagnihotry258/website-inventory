@@ -1,29 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
-import { VENUES, checkVenueConflict, createPermissionRequest } from '@/lib/db';
+import { VENUES, checkVenueConflict, createPermissionRequest, getPermissions, updatePermissionRequest } from '@/lib/db';
 import { UserAccount, PermissionRequest } from '@/lib/types';
 import { 
-  FileText, 
   AlertTriangle, 
   CheckCircle, 
-  Calendar, 
-  Clock, 
-  Building2, 
   Send, 
-  Eye,
-  ShieldCheck,
-  Sparkles,
-  Wand2,
-  ArrowLeft
+  Eye, 
+  Sparkles, 
+  Wand2, 
+  ArrowLeft,
+  FileEdit
 } from 'lucide-react';
 
-export default function DocifyPage() {
+function DocifyContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('editId');
+
   const [currentUser, setUserState] = useState<UserAccount | null>(null);
+  const [editingPermission, setEditingPermission] = useState<PermissionRequest | null>(null);
 
   // Form State
   const [societyName, setSocietyName] = useState('IEEE Student Branch');
@@ -56,17 +56,40 @@ export default function DocifyPage() {
     if (user && user.role === 'SOCIETY') {
       setSocietyName(user.societyName || user.name);
     }
-  }, []);
+
+    if (editId) {
+      const all = getPermissions();
+      const existing = all.find(p => p.id === editId);
+      if (existing) {
+        setEditingPermission(existing);
+        setSocietyName(existing.societyName);
+        setApplicantName(existing.applicantName);
+        setApplicantRoll(existing.applicantRoll);
+        setApplicantPhone(existing.applicantPhone);
+        setApplicantEmail(existing.applicantEmail);
+        setSubject(existing.subject);
+        setEventTitle(existing.eventTitle);
+        setEventPurpose(existing.eventPurpose);
+        setSelectedVenueId(existing.venueId || 'L20');
+        setFromDate(existing.fromDate);
+        setToDate(existing.toDate);
+        setFromTime(existing.fromTime);
+        setToTime(existing.toTime);
+        setExpectedAudience(existing.expectedAudience);
+        setEquipmentInput(existing.equipmentNeeded?.join(', ') || '');
+      }
+    }
+  }, [editId]);
 
   // Real-time conflict check
   useEffect(() => {
     if (selectedVenueId && fromDate && fromTime && toTime) {
-      const result = checkVenueConflict(selectedVenueId, fromDate, toDate || fromDate, fromTime, toTime);
+      const result = checkVenueConflict(selectedVenueId, fromDate, toDate || fromDate, fromTime, toTime, editId || undefined);
       setConflict(result);
     }
-  }, [selectedVenueId, fromDate, toDate, fromTime, toTime]);
+  }, [selectedVenueId, fromDate, toDate, fromTime, toTime, editId]);
 
-  // Button 1 Auto-Fill: Sample 1 (L20 - Hackathon)
+  // Auto-Fill Sample 1 (L20 - Hackathon)
   const handleAutoFillSample1 = () => {
     const randNum = Math.floor(10 + Math.random() * 89);
     setSocietyName(currentUser?.societyName || 'IEEE Student Branch');
@@ -86,7 +109,7 @@ export default function DocifyPage() {
     setEquipmentInput('Projector, AC, Microphones (2), Power Sockets');
   };
 
-  // Button 2 Auto-Fill: Sample 2 (L21 - Robotics Workshop)
+  // Auto-Fill Sample 2 (L21 - Robotics Workshop)
   const handleAutoFillSample2 = () => {
     const randNum = Math.floor(10 + Math.random() * 89);
     setSocietyName('PEC Robotics Society');
@@ -112,6 +135,12 @@ export default function DocifyPage() {
     e.preventDefault();
     setSubmitError('');
 
+    // Time validation: End time must be after Start time for same-day events
+    if ((!toDate || fromDate === toDate) && toTime <= fromTime) {
+      setSubmitError('Invalid Timing: End time must be after Start time for same-day bookings.');
+      return;
+    }
+
     if (conflict.conflict && conflict.conflictingPermission) {
       setSubmitError(`Double Booking Error: ${selectedVenueObj.name} is already locked/booked by ${conflict.conflictingPermission.societyName} on ${conflict.conflictingPermission.fromDate} (${conflict.conflictingPermission.fromTime} - ${conflict.conflictingPermission.toTime}). Please choose another venue or time.`);
       return;
@@ -119,7 +148,7 @@ export default function DocifyPage() {
 
     const equipmentList = equipmentInput.split(',').map(s => s.trim()).filter(Boolean);
 
-    const result = createPermissionRequest({
+    const payloadData = {
       societyName,
       applicantName: applicantName || 'Student Applicant',
       applicantRoll: applicantRoll || '21100000',
@@ -136,12 +165,22 @@ export default function DocifyPage() {
       toTime,
       expectedAudience: Number(expectedAudience),
       equipmentNeeded: equipmentList
-    });
+    };
 
-    if (!result.success || !result.request) {
-      setSubmitError(result.error || 'Failed to generate permission request');
+    if (editId) {
+      const updateResult = updatePermissionRequest(editId, payloadData);
+      if (!updateResult.success || !updateResult.request) {
+        setSubmitError(updateResult.error || 'Failed to update permission request');
+      } else {
+        setSubmitSuccess(updateResult.request);
+      }
     } else {
-      setSubmitSuccess(result.request);
+      const result = createPermissionRequest(payloadData);
+      if (!result.success || !result.request) {
+        setSubmitError(result.error || 'Failed to generate permission request');
+      } else {
+        setSubmitSuccess(result.request);
+      }
     }
   };
 
@@ -157,40 +196,64 @@ export default function DocifyPage() {
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>← Back to Approvals Dashboard</span>
           </Link>
-          <h1 className="text-3xl font-serif font-bold text-slate-900">Book a venue</h1>
+          <h1 className="text-3xl font-serif font-bold text-slate-900">
+            {editingPermission ? 'Modify & Resubmit Booking' : 'Book a venue'}
+          </h1>
           <p className="text-xs text-slate-500 font-sans">
             Times are free-form — any hour of the day, including early morning and late night, may be requested.
           </p>
         </div>
 
         {/* 2 Separate Auto-Fill Dummy Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleAutoFillSample1}
-            className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-extrabold text-blue-950 shadow hover:bg-amber-400 transition flex items-center space-x-1.5 border border-amber-300"
-          >
-            <Wand2 className="h-3.5 w-3.5 text-blue-950" />
-            <span>✨ Auto-Fill Sample 1 (L20)</span>
-          </button>
+        {!editingPermission && (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleAutoFillSample1}
+              className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-extrabold text-blue-950 shadow hover:bg-amber-400 transition flex items-center space-x-1.5 border border-amber-300"
+            >
+              <Wand2 className="h-3.5 w-3.5 text-blue-950" />
+              <span>✨ Auto-Fill Sample 1 (L20)</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleAutoFillSample2}
-            className="rounded-xl bg-blue-900 px-3.5 py-2 text-xs font-extrabold text-amber-300 shadow hover:bg-blue-950 transition flex items-center space-x-1.5 border border-blue-700"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-            <span>✨ Auto-Fill Sample 2 (L21)</span>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={handleAutoFillSample2}
+              className="rounded-xl bg-blue-900 px-3.5 py-2 text-xs font-extrabold text-amber-300 shadow hover:bg-blue-950 transition flex items-center space-x-1.5 border border-blue-700"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+              <span>✨ Auto-Fill Sample 2 (L21)</span>
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Edit Notice Banner */}
+      {editingPermission && (
+        <div className="rounded-xl bg-amber-50 border border-amber-300 p-4 text-xs text-amber-900 flex items-start space-x-3">
+          <FileEdit className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-extrabold text-sm">Modifying Application: {editingPermission.trackingCode}</p>
+            <p>
+              You are editing an application sent back for modifications. Updating and submitting will update your details, record your change in the timeline, and reset the approval chain starting with 1. Shashvat (Secretary).
+            </p>
+            {editingPermission.editRequestRemarks && (
+              <p className="font-semibold text-amber-800 italic pt-1">
+                Officer Remarks: &quot;{editingPermission.editRequestRemarks}&quot;
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {submitSuccess ? (
         <div className="rounded-2xl border bg-white p-8 shadow-xl text-center space-y-4 max-w-2xl mx-auto">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
             <CheckCircle className="h-10 w-10" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900">Booking Request Created!</h2>
+          <h2 className="text-2xl font-bold text-slate-900">
+            {editingPermission ? 'Application Modified & Resubmitted!' : 'Booking Request Created!'}
+          </h2>
           <p className="text-sm text-slate-600">
             Tracking Code: <strong className="font-mono text-blue-900 bg-blue-50 px-2 py-1 rounded">{submitSuccess.trackingCode}</strong>
           </p>
@@ -201,7 +264,7 @@ export default function DocifyPage() {
           <div className="pt-4 flex flex-wrap justify-center gap-3">
             <Link
               href={`/document?id=${submitSuccess.id}`}
-              className="rounded-xl bg-[#003366] px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-blue-900 transition flex items-center space-x-1.5"
+              className="rounded-xl bg-black px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-slate-800 transition flex items-center space-x-1.5"
             >
               <Eye className="h-4 w-4 text-amber-400" />
               <span>View Permission Letter</span>
@@ -217,7 +280,7 @@ export default function DocifyPage() {
       ) : (
         <form onSubmit={handleSubmit} className="rounded-2xl border bg-white p-6 sm:p-8 shadow-xl space-y-6">
           <div className="flex items-center justify-between border-b pb-3">
-            <h2 className="font-bold text-slate-900 text-base">Booking request</h2>
+            <h2 className="font-bold text-slate-900 text-base">Booking request details</h2>
             <span className="text-xs font-semibold text-slate-500">Applying as: <strong>{societyName}</strong></span>
           </div>
 
@@ -394,7 +457,7 @@ export default function DocifyPage() {
                       onClick={() => setSelectedVenueId(v.id)}
                       className={`min-w-[50px] px-3.5 py-2 rounded-lg text-xs font-bold transition shadow-sm border ${
                         isSelected
-                          ? 'bg-[#003366] text-white border-[#003366] ring-2 ring-blue-300 scale-105'
+                          ? 'bg-black text-white border-black ring-2 ring-slate-400 scale-105'
                           : 'bg-white text-slate-800 border-slate-200 hover:border-slate-400 hover:bg-slate-100'
                       }`}
                     >
@@ -425,14 +488,22 @@ export default function DocifyPage() {
             className={`w-full rounded-xl py-3.5 text-sm font-bold text-white shadow-lg transition flex items-center justify-center space-x-2 ${
               conflict.conflict
                 ? 'bg-slate-400 cursor-not-allowed'
-                : 'bg-[#003366] hover:bg-blue-900'
+                : 'bg-black hover:bg-slate-800'
             }`}
           >
             <Send className="h-4 w-4 text-amber-400" />
-            <span>Submit Booking Request for Approval</span>
+            <span>{editingPermission ? 'Resubmit Modified Request' : 'Submit Booking Request for Approval'}</span>
           </button>
         </form>
       )}
     </div>
+  );
+}
+
+export default function DocifyPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500">Loading form...</div>}>
+      <DocifyContent />
+    </Suspense>
   );
 }
