@@ -1,6 +1,6 @@
 import { UserAccount, Role } from './types';
 
-export const PRESET_USERS: Record<string, UserAccount & { passwordHash: string }> = {
+export const INITIAL_PRESET_USERS: Record<string, UserAccount & { passwordHash: string }> = {
   // Admin Account
   'admin': {
     id: 'usr_admin',
@@ -25,30 +25,10 @@ export const PRESET_USERS: Record<string, UserAccount & { passwordHash: string }
     department: 'Student Council',
     avatar: '✍️'
   },
-  'seccy': {
-    id: 'usr_seccy_alias',
-    username: 'seccy',
-    passwordHash: '1',
-    name: 'Shashvat',
-    role: 'SECCY',
-    designation: 'Secretary (Seccy)',
-    department: 'Student Council',
-    avatar: '✍️'
-  },
 
   'prof deepak kumar': {
     id: 'usr_deepak',
     username: 'prof deepak kumar',
-    passwordHash: '1',
-    name: 'Prof. Deepak Kumar',
-    role: 'PROF_INCHARGE',
-    designation: 'Prof. In-Charge (P/I)',
-    department: 'Faculty Affairs',
-    avatar: '👨‍🏫'
-  },
-  'deepak': {
-    id: 'usr_deepak_alias',
-    username: 'deepak',
     passwordHash: '1',
     name: 'Prof. Deepak Kumar',
     role: 'PROF_INCHARGE',
@@ -67,16 +47,6 @@ export const PRESET_USERS: Record<string, UserAccount & { passwordHash: string }
     department: 'Cultural & Technical Societies',
     avatar: '🏛️'
   },
-  'jcsts': {
-    id: 'usr_jcsts_alias',
-    username: 'jcsts',
-    passwordHash: '1',
-    name: 'Daiwik',
-    role: 'CSTS',
-    designation: 'Convenor JCSTS / CSTS',
-    department: 'Cultural & Technical Societies',
-    avatar: '🏛️'
-  },
 
   'prof mp garg': {
     id: 'usr_mpgarg',
@@ -88,30 +58,10 @@ export const PRESET_USERS: Record<string, UserAccount & { passwordHash: string }
     department: 'Dean Student Affairs Secretariat',
     avatar: '⚖️'
   },
-  'mp garg': {
-    id: 'usr_mpgarg_alias',
-    username: 'mp garg',
-    passwordHash: '1',
-    name: 'Prof. M.P. Garg',
-    role: 'ADSA',
-    designation: 'Associate Dean Student Affairs (ADSA)',
-    department: 'Dean Student Affairs Secretariat',
-    avatar: '⚖️'
-  },
 
   'prof puneet kaur': {
     id: 'usr_puneet',
     username: 'prof puneet kaur',
-    passwordHash: '1',
-    name: 'Prof. Puneet Kaur',
-    role: 'DSA',
-    designation: 'Dean Student Affairs (DSA)',
-    department: 'Office of Dean Student Affairs',
-    avatar: '🎓'
-  },
-  'puneet': {
-    id: 'usr_puneet_alias',
-    username: 'puneet',
     passwordHash: '1',
     name: 'Prof. Puneet Kaur',
     role: 'DSA',
@@ -161,14 +111,34 @@ export const STAGE_ROLES: Record<number, { role: Role; label: string; username: 
   5: { role: 'DSA', label: '5. DSA (Dean Student Affairs)', username: 'prof puneet kaur', name: 'Prof. Puneet Kaur' }
 };
 
-const STORAGE_KEY = 'pec_auth_session_v4';
+const USERS_STORAGE_KEY = 'pec_users_store_v5';
+const SESSION_STORAGE_KEY = 'pec_auth_session_v5';
+
+export function getUsersStore(): Record<string, UserAccount & { passwordHash: string }> {
+  if (typeof window === 'undefined') return INITIAL_PRESET_USERS;
+  const stored = localStorage.getItem(USERS_STORAGE_KEY);
+  if (!stored) {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(INITIAL_PRESET_USERS));
+    return INITIAL_PRESET_USERS;
+  }
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return INITIAL_PRESET_USERS;
+  }
+}
+
+export function saveUsersStore(store: Record<string, UserAccount & { passwordHash: string }>) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(store));
+}
+
+export const PRESET_USERS = getUsersStore();
 
 export function getCurrentUser(): UserAccount | null {
   if (typeof window === 'undefined') return null;
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    return null; // Return null if not logged in
-  }
+  const stored = localStorage.getItem(SESSION_STORAGE_KEY);
+  if (!stored) return null;
   try {
     return JSON.parse(stored);
   } catch {
@@ -179,14 +149,33 @@ export function getCurrentUser(): UserAccount | null {
 export function setCurrentUser(user: UserAccount | null) {
   if (typeof window === 'undefined') return;
   if (!user) {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(SESSION_STORAGE_KEY);
   } else {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
   }
-  // Dispatch custom auth-change event so all React components refresh session state instantly
   window.dispatchEvent(new Event('auth-change'));
 }
 
 export function logoutUser() {
   setCurrentUser(null);
+}
+
+export function updateUserPassword(username: string, newPassword: string): { success: boolean; error?: string } {
+  const store = getUsersStore();
+  const key = username.toLowerCase();
+  
+  if (!store[key]) {
+    return { success: false, error: 'User not found' };
+  }
+
+  store[key].passwordHash = newPassword;
+  saveUsersStore(store);
+
+  // Update current session if matching
+  const current = getCurrentUser();
+  if (current && current.username.toLowerCase() === key) {
+    setCurrentUser({ ...current });
+  }
+
+  return { success: true };
 }

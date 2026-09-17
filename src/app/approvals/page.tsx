@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
 import { getCurrentUser, PRESET_USERS, STAGE_ROLES } from '@/lib/auth';
-import { getPermissions, signAndAdvancePermission, rejectPermission, adminSuperApprovePermission } from '@/lib/db';
+import { getPermissions, signAndAdvancePermission, rejectPermission, adminSelectiveSignPermission } from '@/lib/db';
 import { PermissionRequest, UserAccount, Role } from '@/lib/types';
 import SignatureModal from '@/components/SignatureModal';
 import ApprovalTimeline from '@/components/ApprovalTimeline';
@@ -27,8 +27,19 @@ export default function ApprovalsPage() {
   const [currentUser, setUserState] = useState<UserAccount | null>(null);
   const [permissions, setPermissions] = useState<PermissionRequest[]>([]);
   
-  // Admin role impersonation state
+  // Admin role selection state
   const [adminActAsRole, setAdminActAsRole] = useState<Role>('SECCY');
+
+  // Admin selective checkboxes (1, 2, 3, 4, 5)
+  const [selectedAdminRoles, setSelectedAdminRoles] = useState<Record<Role, boolean>>({
+    'SECCY': true,
+    'PROF_INCHARGE': false,
+    'CSTS': false,
+    'ADSA': false,
+    'DSA': false,
+    'ADMIN': false,
+    'SOCIETY': false
+  });
 
   // Signature Modal state
   const [selectedRequest, setSelectedRequest] = useState<PermissionRequest | null>(null);
@@ -105,17 +116,37 @@ export default function ApprovalsPage() {
     }
   };
 
-  // Admin Super Approve All 5 Stages
-  const handleAdminSuperApprove = (requestId: string) => {
-    const result = adminSuperApprovePermission(requestId, currentUser?.name || 'Administrator');
+  // Admin Selective Signing Callback
+  const handleAdminSelectiveSign = (requestId: string) => {
+    const roles: Role[] = (['SECCY', 'PROF_INCHARGE', 'CSTS', 'ADSA', 'DSA'] as Role[]).filter(
+      r => selectedAdminRoles[r]
+    );
+
+    if (roles.length === 0) return;
+
+    const result = adminSelectiveSignPermission(requestId, roles);
     if (result.success) {
       refreshData();
-      confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { y: 0.6 }
-      });
+      if (roles.includes('DSA')) {
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+      }
     }
+  };
+
+  const toggleAllAdminRoles = (select: boolean) => {
+    setSelectedAdminRoles({
+      'SECCY': select,
+      'PROF_INCHARGE': select,
+      'CSTS': select,
+      'ADSA': select,
+      'DSA': select,
+      'ADMIN': select,
+      'SOCIETY': select
+    });
   };
 
   const handleReject = (requestId: string) => {
@@ -133,7 +164,7 @@ export default function ApprovalsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="rounded bg-blue-900 text-amber-300 font-extrabold text-[10px] px-2 py-0.5 uppercase">
+            <span className="rounded bg-[#990000] text-amber-300 font-extrabold text-[10px] px-2 py-0.5 uppercase">
               Sequential Digital Approvals
             </span>
             <h1 className="text-2xl font-bold text-slate-900">Permission & Signature Workflow</h1>
@@ -152,7 +183,7 @@ export default function ApprovalsPage() {
             <div>
               <div className="flex items-center space-x-2">
                 <span className="font-bold text-slate-900 text-sm">{currentUser?.name || 'Guest User'}</span>
-                <span className="rounded bg-blue-900 text-amber-300 font-mono text-[10px] font-bold px-1.5 py-0.2">
+                <span className="rounded bg-[#990000] text-amber-300 font-mono text-[10px] font-bold px-1.5 py-0.2">
                   {currentUser?.role || 'LOGIN'}
                 </span>
               </div>
@@ -170,7 +201,7 @@ export default function ApprovalsPage() {
               <select
                 value={adminActAsRole}
                 onChange={(e) => setAdminActAsRole(e.target.value as Role)}
-                className="w-full rounded-lg border border-amber-300 bg-amber-50 p-1.5 text-xs font-bold text-blue-950 focus:outline-none"
+                className="w-full rounded-lg border border-amber-300 bg-amber-50 p-1.5 text-xs font-bold text-slate-950 focus:outline-none"
               >
                 <option value="SECCY">Act as: 1. Shashvat (Secretary)</option>
                 <option value="PROF_INCHARGE">Act as: 2. Prof. Deepak Kumar (P/I)</option>
@@ -183,19 +214,54 @@ export default function ApprovalsPage() {
         </div>
       </div>
 
-      {/* Admin Quick Action Banner */}
+      {/* Admin Selective Signing Control Panel */}
       {currentUser?.isAdmin && (
-        <div className="rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 p-4 text-blue-950 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center space-x-3">
-            <div className="rounded-xl bg-white/20 p-2 text-white">
-              <Crown className="h-6 w-6" />
+        <div className="rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 p-5 text-blue-950 shadow-lg space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Crown className="h-5 w-5 text-white" />
+              <h3 className="font-extrabold text-sm text-white">Admin Selective Signature Panel</h3>
             </div>
-            <div>
-              <h3 className="font-extrabold text-sm text-white">Backend Administrator Super Access</h3>
-              <p className="text-xs text-amber-100">
-                Super Approve will instantly fill signatures for all 5 stages in the backend and lock the venue.
-              </p>
+            <div className="space-x-2 text-xs">
+              <button
+                type="button"
+                onClick={() => toggleAllAdminRoles(true)}
+                className="px-2.5 py-1 rounded bg-amber-100 font-bold text-amber-950 hover:bg-white"
+              >
+                Select All 5
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleAllAdminRoles(false)}
+                className="px-2.5 py-1 rounded bg-amber-800 text-white font-bold hover:bg-amber-900"
+              >
+                Clear
+              </button>
             </div>
+          </div>
+
+          <p className="text-xs text-amber-100">
+            Check any stage below to selectively sign on behalf of officers 1, 2, 3, 4, or all 5:
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-bold text-white pt-1">
+            {[
+              { role: 'SECCY' as Role, label: '1. Shashvat (Seccy)' },
+              { role: 'PROF_INCHARGE' as Role, label: '2. Prof. Deepak (P/I)' },
+              { role: 'CSTS' as Role, label: '3. Daiwik (CSTS)' },
+              { role: 'ADSA' as Role, label: '4. Prof. M.P. Garg (ADSA)' },
+              { role: 'DSA' as Role, label: '5. Prof. Puneet (DSA)' },
+            ].map((item) => (
+              <label key={item.role} className="flex items-center space-x-2 bg-black/20 p-2 rounded-lg cursor-pointer hover:bg-black/30">
+                <input
+                  type="checkbox"
+                  checked={!!selectedAdminRoles[item.role]}
+                  onChange={(e) => setSelectedAdminRoles({ ...selectedAdminRoles, [item.role]: e.target.checked })}
+                  className="rounded text-amber-500 h-4 w-4"
+                />
+                <span className="truncate">{item.label}</span>
+              </label>
+            ))}
           </div>
         </div>
       )}
@@ -203,7 +269,7 @@ export default function ApprovalsPage() {
       {/* All Applications Pipeline */}
       <div className="space-y-4">
         <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2 border-b pb-2">
-          <Clock className="h-5 w-5 text-blue-900" />
+          <Clock className="h-5 w-5 text-[#990000]" />
           <span>Applications Pipeline & Digital Signatures</span>
         </h2>
 
@@ -215,12 +281,12 @@ export default function ApprovalsPage() {
             return (
               <div 
                 key={perm.id} 
-                className="rounded-2xl border bg-white p-6 shadow-sm space-y-4 hover:shadow-xl transition group relative border-l-4 border-l-[#003366]"
+                className="rounded-2xl border bg-white p-6 shadow-sm space-y-4 hover:shadow-xl transition group relative border-l-4 border-l-[#990000]"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3">
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="font-mono text-xs font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                      <span className="font-mono text-xs font-bold text-red-950 bg-red-50 px-2 py-0.5 rounded border border-red-200">
                         {perm.trackingCode}
                       </span>
                       <span className="text-xs font-bold text-slate-700">{perm.societyName}</span>
@@ -228,7 +294,7 @@ export default function ApprovalsPage() {
                     <h3 className="font-bold text-slate-900 text-lg mt-1">{perm.eventTitle}</h3>
                   </div>
 
-                  {/* Status & Action Buttons */}
+                  {/* Status & Dimmed Action Buttons */}
                   <div className="flex flex-wrap items-center gap-2">
                     {isFullyApproved ? (
                       <span className="rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-extrabold text-emerald-800 flex items-center space-x-1">
@@ -236,7 +302,6 @@ export default function ApprovalsPage() {
                         <span>✓ Fully Signed & Booked</span>
                       </span>
                     ) : hasSignedThisLevel ? (
-                      /* Dimmed button if level already approved */
                       <button
                         disabled
                         className="rounded-xl bg-emerald-50 border border-emerald-300 px-4 py-2 text-xs font-extrabold text-emerald-800 cursor-not-allowed opacity-80 flex items-center space-x-1.5"
@@ -245,24 +310,23 @@ export default function ApprovalsPage() {
                         <span>Signed at {activeSigner.role} Level ✓</span>
                       </button>
                     ) : (
-                      /* Active approve button if not signed yet */
                       <button
                         onClick={() => handleOpenSignModal(perm)}
-                        className="rounded-xl bg-[#003366] px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-blue-900 transition flex items-center space-x-1.5"
+                        className="rounded-xl bg-[#990000] px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-red-900 transition flex items-center space-x-1.5"
                       >
-                        <PenTool className="h-4 w-4 text-amber-400" />
+                        <PenTool className="h-4 w-4 text-amber-300" />
                         <span>Approve & Sign ({activeSigner.role})</span>
                       </button>
                     )}
 
-                    {/* Admin Super Approve Button */}
+                    {/* Admin Selective Sign Button */}
                     {currentUser?.isAdmin && !isFullyApproved && (
                       <button
-                        onClick={() => handleAdminSuperApprove(perm.id)}
+                        onClick={() => handleAdminSelectiveSign(perm.id)}
                         className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-extrabold text-blue-950 shadow-md hover:bg-amber-400 transition flex items-center space-x-1"
                       >
                         <Zap className="h-4 w-4" />
-                        <span>Super Approve All 5 Stages</span>
+                        <span>Sign Selected Stages</span>
                       </button>
                     )}
 

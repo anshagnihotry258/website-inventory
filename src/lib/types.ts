@@ -61,14 +61,26 @@ export interface PermissionRequest {
   subject: string;
   eventTitle: string;
   eventPurpose: string;
+  department?: string;
+  financialAssistance?: string; // 'Yes' | 'No'
   
-  venueId: string;
-  venueName: string;
+  // Multi-day & Multi-room options
+  isMultiDay?: boolean;
+  isDiffTimePerDay?: boolean;
   
   fromDate: string;
   toDate: string;
   fromTime: string;
   toTime: string;
+  
+  // Multi-day second day timings
+  day2FromDate?: string;
+  day2FromTime?: string;
+  day2ToTime?: string;
+  
+  venueId: string;
+  venueName: string; // e.g. "L20, L21, L22"
+  venueIds?: string[];
   
   expectedAudience: number;
   equipmentNeeded: string[];

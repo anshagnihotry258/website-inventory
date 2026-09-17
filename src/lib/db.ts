@@ -25,11 +25,16 @@ export const VENUES: Venue[] = [
   { id: 'T7', name: 'T7', type: 'Tutorial Room', capacity: 60, building: 'Academic Block', facilities: ['Whiteboard'] },
   { id: 'T8', name: 'T8', type: 'Tutorial Room', capacity: 60, building: 'Academic Block', facilities: ['Whiteboard'] },
 
-  // Auditorium
+  // Auditorium & Special Rooms
+  { id: 'L1', name: 'L1', type: 'Lecture Hall', capacity: 150, building: 'Academic Block A', facilities: ['Projector', 'AC'] },
+  { id: 'L2', name: 'L2', type: 'Lecture Hall', capacity: 150, building: 'Academic Block A', facilities: ['Projector'] },
+  { id: 'L3', name: 'L3', type: 'Lecture Hall', capacity: 150, building: 'Academic Block A', facilities: ['Projector'] },
+  { id: 'L8', name: 'L8', type: 'Lecture Hall', capacity: 200, building: 'Academic Block B', facilities: ['Smart Board'] },
+  { id: 'L9', name: 'L9', type: 'Lecture Hall', capacity: 200, building: 'Academic Block B', facilities: ['Smart Board'] },
   { id: 'Auditorium', name: 'Auditorium', type: 'Auditorium', capacity: 800, building: 'Central Campus', facilities: ['Stage', 'Sound System', 'AC'] }
 ];
 
-const PERMISSIONS_STORAGE_KEY = 'pec_permission_requests_v3';
+const PERMISSIONS_STORAGE_KEY = 'pec_permission_requests_v5';
 
 const SEED_REQUESTS: PermissionRequest[] = [
   {
@@ -41,16 +46,24 @@ const SEED_REQUESTS: PermissionRequest[] = [
     applicantPhone: '+91 9876543210',
     applicantEmail: 'ieee@pec.edu.in',
     subject: 'Permission for Annual Tech Symposium & Hackathon 2026',
-    eventTitle: 'HackPEC 2026 - National Hackathon',
-    eventPurpose: 'Annual flagship technical competition, coding workshops, and project showcase.',
-    venueId: 'Auditorium',
-    venueName: 'Auditorium',
-    fromDate: '2026-09-25',
-    toDate: '2026-09-26',
-    fromTime: '09:00',
-    toTime: '18:00',
-    expectedAudience: 450,
-    equipmentNeeded: ['Projector & Screen', 'Microphones (4 Wireless)', 'Podium', 'Extension Boards'],
+    eventTitle: 'RC car workshop',
+    eventPurpose: '2-day hands-on RC Car Building Workshop on. Students will learn basic electronics and build their own acrylic RC car from scratch using Arduino/ESP32 and Bluetooth modules.',
+    department: 'ECE dept (CSRC)',
+    financialAssistance: 'No',
+    isMultiDay: true,
+    isDiffTimePerDay: true,
+    fromDate: '2026-09-19',
+    toDate: '2026-09-20',
+    fromTime: '17:00',
+    toTime: '20:00',
+    day2FromDate: '2026-09-20',
+    day2FromTime: '09:00',
+    day2ToTime: '20:00',
+    venueId: 'L20',
+    venueName: 'L20,21,22,23',
+    venueIds: ['L20', 'L21', 'L22', 'L23'],
+    expectedAudience: 150,
+    equipmentNeeded: ['Projector & Screen', 'Power Extensions', 'Soldering Stations'],
     status: 'APPROVED',
     currentStage: 6,
     signatures: {
@@ -68,7 +81,7 @@ const SEED_REQUESTS: PermissionRequest[] = [
         designation: 'Prof. In-Charge (P/I)',
         signedAt: '2026-09-18T11:30:00Z',
         verificationHash: 'SIG-PI-99410214',
-        remarks: 'Approved. Event aligns with academic goals.'
+        remarks: 'Approved.'
       },
       CSTS: {
         role: 'CSTS',
@@ -76,7 +89,7 @@ const SEED_REQUESTS: PermissionRequest[] = [
         designation: 'Convenor JCSTS / CSTS',
         signedAt: '2026-09-18T14:00:00Z',
         verificationHash: 'SIG-CSTS-1102934',
-        remarks: 'Approved. Schedule cleared.'
+        remarks: 'Approved.'
       },
       ADSA: {
         role: 'ADSA',
@@ -84,7 +97,7 @@ const SEED_REQUESTS: PermissionRequest[] = [
         designation: 'Associate Dean Student Affairs (ADSA)',
         signedAt: '2026-09-18T16:20:00Z',
         verificationHash: 'SIG-ADSA-5561023',
-        remarks: 'Forwarded for final sanction.'
+        remarks: 'Forwarded for sanction.'
       },
       DSA: {
         role: 'DSA',
@@ -92,7 +105,7 @@ const SEED_REQUESTS: PermissionRequest[] = [
         designation: 'Dean Student Affairs (DSA)',
         signedAt: '2026-09-18T17:45:00Z',
         verificationHash: 'SIG-DSA-0012984',
-        remarks: 'Sanctioned. Auditorium locked.'
+        remarks: 'Sanctioned. Rooms locked.'
       }
     },
     history: [
@@ -104,43 +117,6 @@ const SEED_REQUESTS: PermissionRequest[] = [
       { stage: 5, actor: 'Prof. Puneet Kaur', role: 'DSA', action: 'APPROVED', timestamp: '2026-09-18T17:45:00Z' }
     ],
     createdAt: '2026-09-18T09:00:00Z'
-  },
-  {
-    id: 'perm_002',
-    trackingCode: 'PEC-PERM-2026-102',
-    societyName: 'PEC Robotics Society',
-    applicantName: 'Kabir Verma',
-    applicantRoll: '21102019',
-    applicantPhone: '+91 9988776655',
-    applicantEmail: 'robotics@pec.edu.in',
-    subject: 'Request for Lecture Hall L20 for Autonomous Bot Workshop',
-    eventTitle: 'RoboWars & Line Follower Hands-on Session',
-    eventPurpose: 'Practical workshop on microcontrollers, sensor integration, and chassis building.',
-    venueId: 'L20',
-    venueName: 'L20',
-    fromDate: '2026-09-28',
-    toDate: '2026-09-28',
-    fromTime: '14:00',
-    toTime: '18:00',
-    expectedAudience: 110,
-    equipmentNeeded: ['Projector', 'Extra Power Sockets'],
-    status: 'PENDING_PROF',
-    currentStage: 2,
-    signatures: {
-      SECCY: {
-        role: 'SECCY',
-        signatoryName: 'Shashvat',
-        designation: 'Secretary (Seccy)',
-        signedAt: '2026-09-18T12:00:00Z',
-        verificationHash: 'SIG-SEC-7728109',
-        remarks: 'Approved. Forwarded to Prof. Deepak Kumar.'
-      }
-    },
-    history: [
-      { stage: 1, actor: 'PEC Robotics Society', role: 'SOCIETY', action: 'CREATED', timestamp: '2026-09-18T11:00:00Z' },
-      { stage: 1, actor: 'Shashvat', role: 'SECCY', action: 'APPROVED', timestamp: '2026-09-18T12:00:00Z' }
-    ],
-    createdAt: '2026-09-18T11:00:00Z'
   }
 ];
 
@@ -163,9 +139,9 @@ export function savePermissions(requests: PermissionRequest[]) {
   localStorage.setItem(PERMISSIONS_STORAGE_KEY, JSON.stringify(requests));
 }
 
-// Conflict / Double Booking Engine
+// Conflict / Double Booking Engine supporting single or multiple room selection
 export function checkVenueConflict(
-  venueId: string,
+  venueIdOrIds: string | string[],
   fromDate: string,
   toDate: string,
   fromTime: string,
@@ -173,29 +149,35 @@ export function checkVenueConflict(
   excludeRequestId?: string
 ): { conflict: boolean; conflictingPermission?: PermissionRequest } {
   const allPermissions = getPermissions();
-  
-  const activePermissions = allPermissions.filter(
-    p => p.status !== 'REJECTED' && p.id !== excludeRequestId && p.venueId === venueId
-  );
-  
-  for (const perm of activePermissions) {
-    const d1Start = new Date(fromDate).getTime();
-    const d1End = new Date(toDate || fromDate).getTime();
-    const d2Start = new Date(perm.fromDate).getTime();
-    const d2End = new Date(perm.toDate || perm.fromDate).getTime();
+  const checkIds = Array.isArray(venueIdOrIds) ? venueIdOrIds : [venueIdOrIds];
 
-    const dateOverlap = d1Start <= d2End && d1End >= d2Start;
-    
-    if (dateOverlap) {
-      const t1Start = parseTimeToMinutes(fromTime);
-      const t1End = parseTimeToMinutes(toTime);
-      const t2Start = parseTimeToMinutes(perm.fromTime);
-      const t2End = parseTimeToMinutes(perm.toTime);
-      
-      const timeOverlap = t1Start < t2End && t1End > t2Start;
-      
-      if (timeOverlap) {
-        return { conflict: true, conflictingPermission: perm };
+  const activePermissions = allPermissions.filter(
+    p => p.status !== 'REJECTED' && p.id !== excludeRequestId
+  );
+
+  for (const perm of activePermissions) {
+    const permIds = perm.venueIds || [perm.venueId];
+    const hasVenueOverlap = checkIds.some(id => permIds.includes(id));
+
+    if (hasVenueOverlap) {
+      const d1Start = new Date(fromDate).getTime();
+      const d1End = new Date(toDate || fromDate).getTime();
+      const d2Start = new Date(perm.fromDate).getTime();
+      const d2End = new Date(perm.toDate || perm.fromDate).getTime();
+
+      const dateOverlap = d1Start <= d2End && d1End >= d2Start;
+
+      if (dateOverlap) {
+        const t1Start = parseTimeToMinutes(fromTime);
+        const t1End = parseTimeToMinutes(toTime);
+        const t2Start = parseTimeToMinutes(perm.fromTime);
+        const t2End = parseTimeToMinutes(perm.toTime);
+
+        const timeOverlap = t1Start < t2End && t1End > t2Start;
+
+        if (timeOverlap) {
+          return { conflict: true, conflictingPermission: perm };
+        }
       }
     }
   }
@@ -210,11 +192,11 @@ function parseTimeToMinutes(timeStr: string): number {
 }
 
 export function createPermissionRequest(data: Omit<PermissionRequest, 'id' | 'trackingCode' | 'status' | 'currentStage' | 'signatures' | 'history' | 'createdAt'>): { success: boolean; request?: PermissionRequest; error?: string } {
-  const conflictCheck = checkVenueConflict(data.venueId, data.fromDate, data.toDate, data.fromTime, data.toTime);
+  const conflictCheck = checkVenueConflict(data.venueIds || data.venueId, data.fromDate, data.toDate, data.fromTime, data.toTime);
   if (conflictCheck.conflict && conflictCheck.conflictingPermission) {
     return {
       success: false,
-      error: `Double Booking Alert! ${data.venueName} is already locked/requested by ${conflictCheck.conflictingPermission.societyName} for ${conflictCheck.conflictingPermission.fromDate} (${conflictCheck.conflictingPermission.fromTime} - ${conflictCheck.conflictingPermission.toTime}). Please select a different venue or time slot.`
+      error: `Double Booking Conflict Alert! Room ${data.venueName} is already booked/requested by ${conflictCheck.conflictingPermission.societyName} on ${conflictCheck.conflictingPermission.fromDate} (${conflictCheck.conflictingPermission.fromTime} - ${conflictCheck.conflictingPermission.toTime}). Please choose another room or time slot.`
     };
   }
 
@@ -244,7 +226,7 @@ export function createPermissionRequest(data: Omit<PermissionRequest, 'id' | 'tr
   return { success: true, request: newRequest };
 }
 
-// Stage transition logic
+// Single Role Sign Action
 export function signAndAdvancePermission(
   requestId: string,
   role: Role,
@@ -260,7 +242,7 @@ export function signAndAdvancePermission(
   const perm = all[index];
   const nextVerificationHash = `SIG-${role}-${Math.floor(1000000 + Math.random() * 9000000)}`;
   
-  const signatureObj = {
+  const signatureObj: SignatureRecord = {
     role,
     signatoryName,
     designation,
@@ -272,28 +254,13 @@ export function signAndAdvancePermission(
 
   perm.signatures[role] = signatureObj;
 
-  let nextStage: ApprovalStageNumber = perm.currentStage;
-  let nextStatus: PermissionStatus = perm.status;
-
-  if (role === 'SECCY') {
-    nextStage = 2;
-    nextStatus = 'PENDING_PROF';
-  } else if (role === 'PROF_INCHARGE') {
-    nextStage = 3;
-    nextStatus = 'PENDING_CSTS';
-  } else if (role === 'CSTS') {
-    nextStage = 4;
-    nextStatus = 'PENDING_ADSA';
-  } else if (role === 'ADSA') {
-    nextStage = 5;
-    nextStatus = 'PENDING_DSA';
-  } else if (role === 'DSA' || role === 'ADMIN') {
-    nextStage = 6;
-    nextStatus = 'APPROVED';
+  // Check how many stages are now completed
+  const hasDSA = !!perm.signatures['DSA'];
+  if (hasDSA) {
+    perm.status = 'APPROVED';
+    perm.currentStage = 6;
   }
 
-  perm.currentStage = nextStage;
-  perm.status = nextStatus;
   perm.history.push({
     stage: perm.currentStage,
     actor: signatoryName,
@@ -309,10 +276,10 @@ export function signAndAdvancePermission(
   return { success: true, updatedRequest: perm };
 }
 
-// Admin Super-Approve Backend Function: Immediately signs all 5 stages & locks room!
-export function adminSuperApprovePermission(
+// Admin Selective Sign: Allows Admin to sign any 1, 2, 3, 4, or all 5 roles at once!
+export function adminSelectiveSignPermission(
   requestId: string,
-  adminName: string = 'Backend Administrator'
+  rolesToSign: Role[]
 ): { success: boolean; updatedRequest?: PermissionRequest; error?: string } {
   const all = getPermissions();
   const index = all.findIndex(p => p.id === requestId);
@@ -321,62 +288,32 @@ export function adminSuperApprovePermission(
   const perm = all[index];
   const now = new Date().toISOString();
 
-  // Populate signatures for all 5 stages
-  perm.signatures['SECCY'] = perm.signatures['SECCY'] || {
-    role: 'SECCY',
-    signatoryName: 'Shashvat (Admin Override)',
-    designation: 'Secretary (Seccy)',
-    signedAt: now,
-    verificationHash: `SIG-SEC-ADMIN-${Math.floor(100000 + Math.random() * 900000)}`,
-    remarks: 'Super approved by Backend Admin.'
+  const roleNameMap: Record<Role, { name: string; desig: string }> = {
+    'SECCY': { name: 'Shashvat (Admin Override)', desig: 'Secretary (Seccy)' },
+    'PROF_INCHARGE': { name: 'Prof. Deepak Kumar (Admin Override)', desig: 'Prof. In-Charge (P/I)' },
+    'CSTS': { name: 'Daiwik (Admin Override)', desig: 'Convenor JCSTS / CSTS' },
+    'ADSA': { name: 'Prof. M.P. Garg (Admin Override)', desig: 'Associate Dean SA (ADSA)' },
+    'DSA': { name: 'Prof. Puneet Kaur (Admin Override)', desig: 'Dean Student Affairs (DSA)' },
+    'ADMIN': { name: 'Administrator', desig: 'System Super Admin' },
+    'SOCIETY': { name: 'Club Lead', desig: 'Society Lead' }
   };
 
-  perm.signatures['PROF_INCHARGE'] = perm.signatures['PROF_INCHARGE'] || {
-    role: 'PROF_INCHARGE',
-    signatoryName: 'Prof. Deepak Kumar (Admin Override)',
-    designation: 'Prof. In-Charge (P/I)',
-    signedAt: now,
-    verificationHash: `SIG-PI-ADMIN-${Math.floor(100000 + Math.random() * 900000)}`,
-    remarks: 'Super approved by Backend Admin.'
-  };
+  for (const r of rolesToSign) {
+    const meta = roleNameMap[r] || { name: 'Admin Officer', desig: r };
+    perm.signatures[r] = perm.signatures[r] || {
+      role: r,
+      signatoryName: meta.name,
+      designation: meta.desig,
+      signedAt: now,
+      verificationHash: `SIG-${r}-ADMIN-${Math.floor(100000 + Math.random() * 900000)}`,
+      remarks: 'Signed via Admin Selective Panel.'
+    };
+  }
 
-  perm.signatures['CSTS'] = perm.signatures['CSTS'] || {
-    role: 'CSTS',
-    signatoryName: 'Daiwik (Admin Override)',
-    designation: 'Convenor JCSTS / CSTS',
-    signedAt: now,
-    verificationHash: `SIG-CSTS-ADMIN-${Math.floor(100000 + Math.random() * 900000)}`,
-    remarks: 'Super approved by Backend Admin.'
-  };
-
-  perm.signatures['ADSA'] = perm.signatures['ADSA'] || {
-    role: 'ADSA',
-    signatoryName: 'Prof. M.P. Garg (Admin Override)',
-    designation: 'Associate Dean SA (ADSA)',
-    signedAt: now,
-    verificationHash: `SIG-ADSA-ADMIN-${Math.floor(100000 + Math.random() * 900000)}`,
-    remarks: 'Super approved by Backend Admin.'
-  };
-
-  perm.signatures['DSA'] = perm.signatures['DSA'] || {
-    role: 'DSA',
-    signatoryName: 'Prof. Puneet Kaur (Admin Override)',
-    designation: 'Dean Student Affairs (DSA)',
-    signedAt: now,
-    verificationHash: `SIG-DSA-ADMIN-${Math.floor(100000 + Math.random() * 900000)}`,
-    remarks: 'Super approved by Backend Admin. Room Locked.'
-  };
-
-  perm.currentStage = 6;
-  perm.status = 'APPROVED';
-  perm.history.push({
-    stage: 6,
-    actor: adminName,
-    role: 'ADMIN',
-    action: 'ADMIN_SUPER_APPROVED',
-    timestamp: now,
-    remarks: 'Backend Super Approval applied to all stages.'
-  });
+  if (perm.signatures['DSA']) {
+    perm.status = 'APPROVED';
+    perm.currentStage = 6;
+  }
 
   all[index] = perm;
   savePermissions(all);
